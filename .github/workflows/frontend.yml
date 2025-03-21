@@ -38,5 +38,6 @@ jobs:
       # Étape 5 : Vérifier que le build a réussi
       - name: Verify Build Success
         run: |
+          pwd
+          ls -la
           if [ ! -d "frontend/.next" ]; then echo "Build failed"; exit 1; fi
-        working-directory: ./frontend 
