@@ -1,0 +1,39 @@
+name: Build Next.js Project
+
+on:
+  push:
+    branches:
+      - main  # Déclenche le workflow sur les push vers la branche principale
+  pull_request:
+    branches:
+      - main  # Déclenche le workflow lors des PR vers la branche principale
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Utiliser une image Ubuntu pour l'environnement d'exécution
+
+    steps:
+      # Étape 1 : Récupérer le code du dépôt
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Étape 2 : Installer Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      # Étape 3 : Installer les dépendances du projet
+      - name: Install dependencies
+        run: |
+          npm install
+
+      # Étape 4 : Builder le projet Next.js
+      - name: Build Next.js project
+        run: |
+          npm run build
+
+      # Étape 5 : Vérifier que le build a réussi
+      - name: Verify Build Success
+        run: |
+          if [ ! -d "out" ]; then echo "Build failed"; exit 1; fi
