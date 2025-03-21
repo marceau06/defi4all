@@ -26,6 +26,10 @@ jobs:
       # Étape 3 : Installer les dépendances du projet
       - name: Install dependencies
         run: |
+          pwd
+          cd frontend
+          pwd
+          ls -la
           npm install
 
       # Étape 4 : Builder le projet Next.js
