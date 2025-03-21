@@ -26,18 +26,17 @@ jobs:
       # Étape 3 : Installer les dépendances du projet
       - name: Install dependencies
         run: |
-          pwd
-          cd frontend
-          pwd
-          ls -la
           npm install
+        working-directory: ./frontend 
 
       # Étape 4 : Builder le projet Next.js
       - name: Build Next.js project
         run: |
           npm run build
+        working-directory: ./frontend 
 
       # Étape 5 : Vérifier que le build a réussi
       - name: Verify Build Success
         run: |
           if [ ! -d "out" ]; then echo "Build failed"; exit 1; fi
+        working-directory: ./frontend 
