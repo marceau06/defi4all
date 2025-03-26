@@ -1,10 +1,10 @@
 const { assert, expect } = require("chai");
 const hre = require("hardhat");
-// const { ethers } = require("hardhat");
+const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 const { BigNumber } = require("hardhat");
 const { bigint } = require("hardhat/internal/core/params/argumentTypes");
-const { convertToCurrencyDecimals } = require("@aave/core-v3/helpers/contracts-helpers");
+// const { convertToCurrencyDecimals } = require("@aave/core-v3/helpers/contracts-helpers");
   
   describe("D4A", function () {
 
@@ -24,8 +24,9 @@ const { convertToCurrencyDecimals } = require("@aave/core-v3/helpers/contracts-h
       
       // Créer une instance de USDC
       const usdcToken = await ethers.getContractAt("IERC20", usdcTokenAddress);
+      // console.log(usdcToken);
       // Récupérer le routeur uniswap v2 sur le réseau
-      const uniswapRouter = await hre.ethers.getContractAt("IUniswapV2Router02", uniswapRouterAddress);
+      const uniswapRouter = await ethers.getContractAt("IUniswapV2Router02", uniswapRouterAddress);
       
       // SWAP ETH to USDC
       // Show balance before SWAP
