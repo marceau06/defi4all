@@ -1,0 +1,34 @@
+name: Run Hardhat Tests
+
+on:
+  push:
+    branches:
+      -  smart-contract-development
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest 
+
+    steps:
+      # Étape 1: Vérifier le code source
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Étape 2: Installer Node.js (version recommandée par Hardhat)
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      # Étape 3: Installer les dépendances
+      - name: Install dependencies
+        run: |
+          npm install
+
+      # Étape 4: Exécuter les tests Hardhat
+      - name: Run Hardhat tests
+        run: |
+          npx hardhat test
