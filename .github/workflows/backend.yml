@@ -26,9 +26,11 @@ jobs:
       # Étape 3: Installer les dépendances
       - name: Install dependencies
         run: |
+          cd backend 
           npm install
 
       # Étape 4: Exécuter les tests Hardhat
       - name: Run Hardhat tests
         run: |
+          cd backend 
           npx hardhat test
