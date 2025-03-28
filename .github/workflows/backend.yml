@@ -28,8 +28,14 @@ jobs:
         run: |
           cd backend 
           npm install
+      
+      # Étape 4: Lancer la blockchain en local
+      - name: Start blockchain
+        run: |
+          cd backend 
+          npx hardhat node --network hardhat
 
-      # Étape 4: Exécuter les tests Hardhat
+      # Étape 5: Exécuter les tests Hardhat
       - name: Run Hardhat tests
         run: |
           cd backend 
