@@ -7,11 +7,11 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IPool } from "@aave/core-v3/contracts/interfaces/IPool.sol";
 import { IUniswapV2Router02 } from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import { IUniswapV2Factory } from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import { DataTypes } from "@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol";
 import { IAToken } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IAToken.sol";
 
-
-contract D4A is Ownable {
+contract D4A is ERC20, Ownable {
 
     // Mapping to save users deposits 
     mapping(address => uint256) public userDeposits;
@@ -20,18 +20,24 @@ contract D4A is Ownable {
     IPool public aavePool;
     IERC20 public usdcToken;
     IERC20 public ausdcToken;
+    IUniswapV2Router02 public uniswapV2Router02;
 
     // Events
     event Deposited(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event SuppliedToAave(address indexed user, uint256 amount);
     event WithdrawnFromAave(address indexed user, uint256 amount);
+    event Minted(address indexed user, uint256 amount);
+    event Burned(address indexed user, uint256 amount);
 
     // Constructor
-    constructor(address _initialOwner, address _aavePoolAddress, address _usdcTokenAddress, address _ausdcTokenAddress) Ownable(_initialOwner) {
+    constructor(address _initialOwner, address _aavePoolAddress, address _usdcTokenAddress, address _ausdcTokenAddress, address _uniswapV2Router02) 
+    ERC20("D4AToken", "D4A") 
+    Ownable(_initialOwner) {
         aavePool = IPool(_aavePoolAddress);
         usdcToken = IERC20(_usdcTokenAddress);
         ausdcToken = IERC20(_ausdcTokenAddress);
+        uniswapV2Router02 = IUniswapV2Router02(_uniswapV2Router02);
     }
 
     /// @notice Allows the user to deposit USDC into the contract
@@ -39,23 +45,19 @@ contract D4A is Ownable {
     /// @param _amount The amount in wei to send
     function depositUSDC(uint256 _amount) public {
 
-        require(_amount > 0, "Not enough funds deposited");
+        require(_amount > 0, "Amount must be greater than 0");
         // Vérifier que l'utilisateur a suffisamment d'USDC
-        require(usdcToken.balanceOf(msg.sender) >= _amount, "Insufficient balance");
-
-        // usdcToken.approve(msg.sender, _amount);
+        require(usdcToken.balanceOf(msg.sender) >= _amount, "Insufficient funds");
     
         // Vérifier que l'utilisateur a autorisé le contrat à transférer les tokens
-        // uint256 allowance = usdcToken.allowance(msg.sender, address(this));
-        // require(allowance >= _amount, "Allowance too low");
-
         uint256 allowance = usdcToken.allowance(msg.sender, address(this));
         require(allowance >= _amount, "Allowance too low");
 
         // Effectuer le transfert de USDC vers ce contrat
         usdcToken.transferFrom(msg.sender, address(this), _amount);
-        // bool success = usdcToken.transferFrom(msg.sender, address(this), amount);
-        // require(success, "Transfer failed");
+
+        // Mint 15% of D4AS
+        _mint(msg.sender, _amount * 15 / 100);
 
         // Mettre à jour le solde du dépôt de l'utilisateur
         userDeposits[msg.sender] += _amount;
@@ -69,7 +71,7 @@ contract D4A is Ownable {
     /// @param _amount The amount in wei to withdraw
     function withdrawUSDC(uint256 _amount) external {
         require(_amount > 0, "Amount must be greater than 0");
-        require(userDeposits[msg.sender] >= _amount, "Insufficient deposit");
+        require(userDeposits[msg.sender] >= _amount, "Insufficient funds");
         
         // usdcToken.approve(msg.sender, _amount);
 
@@ -108,7 +110,7 @@ contract D4A is Ownable {
     /// @dev Withdraw a certain amount of usdc from the aave pool
     /// @param _amount The amount in wei to withdraw
     function withdrawFromAave(uint256 _amount) external {
-        require(_amount > 0, "Amount to withdraw must be greater than 0");
+        require(_amount > 0, "Amount must be greater than 0");
         require(ausdcToken.balanceOf(msg.sender) >= _amount, "Insufficient balance of aUsdc");
 
         ausdcToken.approve(msg.sender, _amount);
@@ -126,6 +128,12 @@ contract D4A is Ownable {
         emit WithdrawnFromAave(msg.sender, _amount);
     }
 
+    ///@notice Allows the owner to burn D4A token
+    function burn(uint256 _amount) external onlyOwner {
+        _burn(msg.sender, _amount);
+        emit Burned(msg.sender, _amount);
+    }
+
     ///@notice Allows to get the amount of usdc on the smart contract 
     ///@return The amount of usdc on the smart contract
     function getUsdcBalance() external view returns (uint256) {
@@ -137,6 +145,7 @@ contract D4A is Ownable {
     function getUserBalance(address _address) external view returns(uint) {
         return userDeposits[_address];
     }
+    
 }
 
 
