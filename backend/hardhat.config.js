@@ -1,9 +1,9 @@
 require("@nomicfoundation/hardhat-toolbox");
 require ("dotenv").config();
 
-const RPC_URL = process.env.RPC_URL || ''
-const ALCHEMY_MAINNET_RPC_URL = process.env.ALCHEMY_MAINNET_RPC_URL || ''
-const PRIVATE_KEY = process.env.PRIVATE_KEY || ''
+const ALCHEMY_SEPOLIA_RPC_URL = process.env.ALCHEMY_SEPOLIA_RPC_URL || '';
+const ALCHEMY_MAINNET_RPC_URL = process.env.ALCHEMY_MAINNET_RPC_URL || '';
+const SEPOLIA_PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY || '';
 
 module.exports = {
   solidity: "0.8.28",
@@ -23,9 +23,9 @@ module.exports = {
       }
     },
     sepolia: {
-      url: RPC_URL,
+      url: ALCHEMY_SEPOLIA_RPC_URL,
       chainId: 11155111,
-      accounts: [`0x${PRIVATE_KEY}`]
+      accounts: [`0x${SEPOLIA_PRIVATE_KEY}`]
     }
   },
   etherscan: {
