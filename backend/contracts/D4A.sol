@@ -37,7 +37,7 @@ contract D4A is Ownable {
     /// @notice Allows the user to deposit USDC into the contract
     /// @dev Supplies a certain amount of usdc into the contract
     /// @param _amount The amount in wei to send
-    function depositUSDC(uint256 _amount) external {
+    function depositUSDC(uint256 _amount) public {
 
         require(_amount > 0, "Not enough funds deposited");
         // Vérifier que l'utilisateur a suffisamment d'USDC
@@ -88,7 +88,13 @@ contract D4A is Ownable {
     function supplyToAave(uint256 _amount) external {
         require(_amount > 0, "Amount must be greater than 0");
         require(usdcToken.balanceOf(msg.sender) >= _amount, "Insufficient funds");
-        
+
+        // 
+        uint256 allowance = usdcToken.allowance(msg.sender, address(this));
+        require(allowance >= _amount, "Allowance too low");
+        // Deposit usdc to repay the contract
+        usdcToken.transferFrom(msg.sender, address(this), _amount);
+
         // Approve the aavePool contract to transfer the tokens
         usdcToken.approve(address(aavePool), _amount);
 

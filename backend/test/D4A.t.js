@@ -152,7 +152,6 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
       
       })
 
-
     })
 
 
@@ -184,8 +183,8 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         console.log("********************* SUPPLY TEST *********************");
 
         // Supply amount is 50 usdc
-        const amountUSDC = hre.ethers.parseUnits("50", 6);
-        console.log("Amount to supply: ", amountUSDC);
+        const amountToSupply = hre.ethers.parseUnits("50", 6);
+        console.log("Amount to supply: ", amountToSupply);
         
         console.log("///////////// Contract /////////////");
         const contractUsdcBalanceBeforeSupply = await usdcToken.balanceOf(d4A);
@@ -222,13 +221,16 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         // USDC Owner balance on the contract before SUPPLY
         expect(ownerUsdcBalanceOnTheContractBeforeSupply).to.equal(1000000000);
 
+        // Approuver le contrat pour pouvoir transférer les tokens USDC
+        await usdcToken.approve(d4A, amountToSupply);
+
         // Do the supply
-        await expect(d4A.supplyToAave(amountUSDC))
+        await expect(d4A.supplyToAave(amountToSupply))
           .to.emit(d4A, "SuppliedToAave")
-          .withArgs(owner.address, amountUSDC);
+          .withArgs(owner.address, amountToSupply);
 
         console.log("********************* SUPPLY DONE *********************");
-        console.log("Dépôt sur la pool effectué avec succès pour un montant de ", amountUSDC);
+        console.log("Dépôt sur la pool effectué avec succès pour un montant de ", amountToSupply);
         
         const contractUsdcBalanceAfterSupply = await usdcToken.balanceOf(d4A);
         const contractAUsdcBalanceAfterSupply = await aUsdcToken.balanceOf(d4A);
@@ -251,7 +253,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         console.log("ETH Owner balance after SUPPLY: ", hre.ethers.formatUnits(ownerEthBalanceAfterSupply, 18));
 
         // USDC Contract balance before SUPPLY
-        expect(contractUsdcBalanceAfterSupply).to.equal(950000000);
+        expect(contractUsdcBalanceAfterSupply).to.equal(1000000000); 
         // AUSDC Contract balance before SUPPLY
         expect(contractAUsdcBalanceBeforeSupply).to.equal(0);
         // ETH Contract balance before SUPPLY
@@ -259,8 +261,9 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
 
         // USDC Owner balance before SUPPLY
-        expect(ownerUsdcBalanceAfterSupply).to.equal(2931262574);
-        // AUSDC Owner balance before SUPPLY
+        // 2931262574 - 50000000 = 2881262574
+        expect(ownerUsdcBalanceAfterSupply).to.equal(2881262574);
+        // AUSDC Owner balance before SUPPLY         
         expect(ownerAUsdcBalancefterSupply).to.equal(50000000);
         // USDC Owner balance on the contract before SUPPLY
         expect(ownerUsdcBalanceOnTheContractAfterSupply).to.equal(1000000000);
@@ -268,7 +271,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         console.log("********************* WITHDRAWAL TEST *********************");
 
         // Withdraw amount is 40 usdc
-        const amountToWithdraw = hre.ethers.parseUnits("40", 6) // 40 USDC
+        const amountToWithdraw = hre.ethers.parseUnits("50", 6) // 40 USDC
 
         // Approuver le contrat pour pouvoir transférer les tokens AUSDC au contrat
         await aUsdcToken.approve(d4A, amountToWithdraw);
@@ -303,21 +306,19 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         console.log("Balance aUsdcToken owner : ", await aUsdcToken.balanceOf(owner.address));
 
         // USDC Contract balance before SUPPLY
-        expect(contractUsdcBalanceAfterWithdraw).to.equal(950000000);
+        expect(contractUsdcBalanceAfterWithdraw).to.equal(1000000000);
         // AUSDC Contract balance before SUPPLY
         expect(contractAUsdcBalanceAfterWithdraw).to.equal(0);
         // ETH Contract balance before SUPPLY
         // expect(contractEthBalanceAfterSupply).to.equal(0);
 
 
-        // USDC Owner balance before SUPPLY
-        expect(ownerUsdcBalanceAfterWithdraw).to.equal(2971262574);
-        // AUSDC Owner balance before SUPPLY
-        expect(ownerAUsdcBalanceAfterWithdraw).to.equal(10000000);
-        // USDC Owner balance on the contract before SUPPLY
+        // USDC Owner balance before SUPPLY: Recover all the USDC that had been supplied 
+        expect(ownerUsdcBalanceAfterWithdraw).to.equal(2931262574);
+        // AUSDC Owner balance before SUPPLY: Should be O as we recovered all the USDC that had been supplied  
+        expect(ownerAUsdcBalanceAfterWithdraw).to.equal(0);
+        // USDC Owner balance on the contract before SUPPLY: 
         expect(ownerUsdcBalanceOnTheContractAfterWithdraw).to.equal(1000000000);
-
-        // expect(parseFloat(hre.ethers.formatUnits(contractAaveAccountDataAfterWithdraw.totalCollateralBase.toString(), 8))).to.be.closeTo(40, 1);
 
       })
 
