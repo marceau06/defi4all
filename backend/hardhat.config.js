@@ -22,11 +22,11 @@ module.exports = {
         maxFeePerGas: 80000000000 // Definir le max de gas que l'on peut mettre dans une transaction
       }
     },
-    sepolia: {
-      url: ALCHEMY_SEPOLIA_RPC_URL,
-      chainId: 11155111,
-      accounts: [`0x${SEPOLIA_PRIVATE_KEY}`]
-    }
+    // sepolia: {
+    //   url: ALCHEMY_SEPOLIA_RPC_URL,
+    //   chainId: 11155111,
+    //   accounts: [`0x${SEPOLIA_PRIVATE_KEY}`]
+    // }
   },
   etherscan: {
     apiKey: {
