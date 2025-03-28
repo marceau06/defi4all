@@ -105,8 +105,8 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         const { d4A, owner, poolAddress, usdcTokenAddress } = await loadFixture(deployContractFixture);
 
         const contractOwner = await d4A.owner();
-        const contractPoolAddress = await d4A.poolAddress();
-        const contractUsdcTokenAddress = await d4A.usdcTokenAddress();
+        const contractPoolAddress = await d4A.aavePool();
+        const contractUsdcTokenAddress = await d4A.usdcToken();
 
         assert(contractOwner === owner.address);
         assert(contractPoolAddress === poolAddress);
@@ -170,7 +170,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
       it('should revert when amount sent is more than the wallet balance ', async function() {
         const { d4A } = await loadFixture(simpleDepositFixture);
-        const amountToDeposit = hre.ethers.parseUnits("2000", 6); // 2000 usdc
+        const amountToDeposit = hre.ethers.parseUnits("10000", 6); // 10000 usdc
 
         await expect(d4A.supplyToAave(amountToDeposit))
                 .to.be.revertedWith("Insufficient funds"); 
