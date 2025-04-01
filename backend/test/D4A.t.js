@@ -1,4 +1,4 @@
-const { assert, expect } = require("chai");
+const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
@@ -6,23 +6,16 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
   describe("Supply", function () {
 
-    const AAVE_POOL_ADDRESS_MAINNET = process.env.AAVE_POOL_ADDRESS_MAINNET || '';
-    const USDC_ADDRESS_MAINNET = process.env.USDC_ADDRESS_MAINNET || '';
-    const UNISWAP_ROUTER_ADDRESS_MAINNET = process.env.UNISWAP_ROUTER_ADDRESS_MAINNET || '';
-    const AUSDC_ADDRESS_MAINNET = process.env.AUSDC_ADDRESS_MAINNET || '';
+
 
 
     async function deployContractSupplyTestFixture() {
 
       const [owner, addressUser] = await ethers.getSigners();
-      // AAVE v3 Pool Address on Mainnet
-      const poolAddress = AAVE_POOL_ADDRESS_MAINNET; 
-      // USDC Adress on Mainnet
-      const usdcTokenAddress = USDC_ADDRESS_MAINNET; 
-      // Uniswap V2 router on Mainnet
-      const uniswapRouterAddress = UNISWAP_ROUTER_ADDRESS_MAINNET; 
-      // AAVE USDC Adress on Mainnet
-      const aUsdcTokenAddress = AUSDC_ADDRESS_MAINNET; 
+      const poolAddress = process.env.AAVE_POOL_ADDRESS_MAINNET || '';
+      const usdcTokenAddress = process.env.USDC_ADDRESS_MAINNET || '';
+      const uniswapRouterAddress = process.env.UNISWAP_ROUTER_ADDRESS_MAINNET || '';
+      const aUsdcTokenAddress = process.env.AUSDC_ADDRESS_MAINNET || '';
 
       // Deploy D4A contract
       const d4A = await hre.ethers.deployContract("D4A", [owner.address, poolAddress, usdcTokenAddress, aUsdcTokenAddress, uniswapRouterAddress])
@@ -244,11 +237,11 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         console.log("AUSDC contract balance on the pool after WITHDRAW: ",  hre.ethers.formatUnits(contractAUsdcBalanceAfterWithdraw, 8));
         console.log("ETH Owner balance after WITHDRAW: ", hre.ethers.formatUnits(ownerEthBalanceAfterWithdraw, 18));
 
-        // AUSDC Contract balance before SUPPLY
+        // AUSDC Contract balance after Withdraw
         expect(contractAUsdcBalanceAfterWithdraw).to.equal(0);
-        // USDC Owner balance before SUPPLY: Recover all the USDC that had been supplied 
+        // USDC Owner balance after Withdraw: Recover all the USDC that had been supplied 
         expect(ownerUsdcBalanceAfterWithdraw).to.equal(ethValueInUsdc);
-        // AUSDC Owner balance before SUPPLY: Should be O as we recovered all the USDC that had been supplied  
+        // AUSDC Owner balance after Withdraw: Should be O as we recovered all the USDC that had been supplied  
         expect(ownerAUsdcBalanceAfterWithdraw).to.equal(0);
       })
     })
