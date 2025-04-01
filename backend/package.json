@@ -1,6 +1,14 @@
 {
-  "devDependencies": {
+  "dependencies": {
+    "@aave-dao/aave-v3-origin": "^3.3.0",
+    "@aave/aave-token": "^1.0.4",
+    "@aave/core-v3": "^1.19.3",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "hardhat": "^2.22.19"
+    "@openzeppelin/contracts": "^5.2.0",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
+    "dotenv": "^16.4.7",
+    "hardhat": "^2.22.19",
+    "usdc": "^0.1.4"
   }
 }
