@@ -240,9 +240,9 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         const ownerEthBalanceAfterWithdraw = await ethers.provider.getBalance(owner.address)
 
         console.log("USDC Owner balance after WITHDRAW: ", hre.ethers.formatUnits(ownerUsdcBalanceAfterWithdraw, 6));
-        console.log("AUSDC Owner balance on the pool after WITHDRAW: ",  hre.ethers.formatUnits(contractAUsdcBalanceAfterWithdraw, 8));
+        console.log("AUSDC Owner balance after WITHDRAW: : ", hre.ethers.formatUnits(ownerAUsdcBalanceAfterWithdraw, 6));
+        console.log("AUSDC contract balance on the pool after WITHDRAW: ",  hre.ethers.formatUnits(contractAUsdcBalanceAfterWithdraw, 8));
         console.log("ETH Owner balance after WITHDRAW: ", hre.ethers.formatUnits(ownerEthBalanceAfterWithdraw, 18));
-        console.log("Balance aUsdcToken owner : ", await aUsdcToken.balanceOf(owner.address));
 
         // AUSDC Contract balance before SUPPLY
         expect(contractAUsdcBalanceAfterWithdraw).to.equal(0);
