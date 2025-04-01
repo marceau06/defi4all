@@ -43,26 +43,25 @@ contract D4A is ERC20, Ownable {
     /// @notice Allows the user to deposit USDC into the contract
     /// @dev Supplies a certain amount of usdc into the contract
     /// @param _amount The amount in wei to send
-    function depositUSDC(uint256 _amount) public {
-
+    function depositUSDC(uint256 _amount) external {
+        // Check that the amount is greater than 0
         require(_amount > 0, "Amount must be greater than 0");
-        // Vérifier que l'utilisateur a suffisamment d'USDC
+        // Check that the user has enough USDC
         require(usdcToken.balanceOf(msg.sender) >= _amount, "Insufficient funds");
-    
-        // Vérifier que l'utilisateur a autorisé le contrat à transférer les tokens
+        // Check that the user has authorized the contract to transfer the tokens
         uint256 allowance = usdcToken.allowance(msg.sender, address(this));
         require(allowance >= _amount, "Allowance too low");
 
-        // Effectuer le transfert de USDC vers ce contrat
+        // Transfer USDC to this contract
         usdcToken.transferFrom(msg.sender, address(this), _amount);
 
         // Mint 15% of D4AS
         _mint(msg.sender, _amount * 15 / 100);
 
-        // Mettre à jour le solde du dépôt de l'utilisateur
+        // Update user deposit balance
         userDeposits[msg.sender] += _amount;
 
-        // Émettre un événement pour notifier le dépôt
+        // Emit an event to notify the deposit
         emit Deposited(msg.sender, _amount);
     }
 
@@ -70,17 +69,18 @@ contract D4A is ERC20, Ownable {
     /// @dev Withdraw a certain amount of usdc from contract
     /// @param _amount The amount in wei to withdraw
     function withdrawUSDC(uint256 _amount) external {
+        // Check that the amount is greater than 0
         require(_amount > 0, "Amount must be greater than 0");
+        // Check that the user has enough USDC on the contract
         require(userDeposits[msg.sender] >= _amount, "Insufficient funds");
-        
-        // usdcToken.approve(msg.sender, _amount);
 
-        // Effectuer le transfert de USDC à l'utilisateur
+        // Transfer USDC to the user
         usdcToken.transfer(msg.sender, _amount);
 
-        // Mettre à jour le solde du dépôt de l'utilisateur avant le retrait
+        // Update user deposit balance
         userDeposits[msg.sender] -= _amount;
-
+        
+        // Emit an event to notify the withdrawal
         emit Withdrawn(msg.sender, _amount);
     }
 
@@ -88,21 +88,24 @@ contract D4A is ERC20, Ownable {
     /// @dev Supplies a certain amount of usdc into the aave pool
     /// @param _amount The amount in wei to supply
     function supplyToAave(uint256 _amount) external {
+        // Check that the amount is greater than 0
         require(_amount > 0, "Amount must be greater than 0");
+        // Check that the user has enough USDC
         require(usdcToken.balanceOf(msg.sender) >= _amount, "Insufficient funds");
-
-        // 
+        // Check that the user has authorized the contract to transfer the tokens
         uint256 allowance = usdcToken.allowance(msg.sender, address(this));
         require(allowance >= _amount, "Allowance too low");
+
         // Deposit usdc to repay the contract
         usdcToken.transferFrom(msg.sender, address(this), _amount);
 
         // Approve the aavePool contract to transfer the tokens
         usdcToken.approve(address(aavePool), _amount);
 
-        // Supplies a certain _amount of usdc into the Aave V3 aavePool contract
+        // Supplies _amount of usdc into the Aave V3 aavePool contract
         aavePool.supply(address(usdcToken), _amount, msg.sender, 0);
 
+        // Emit an event to notify the supply
         emit SuppliedToAave(msg.sender, _amount);
     }
 
@@ -110,21 +113,21 @@ contract D4A is ERC20, Ownable {
     /// @dev Withdraw a certain amount of usdc from the aave pool
     /// @param _amount The amount in wei to withdraw
     function withdrawFromAave(uint256 _amount) external {
+        // Check that the amount is greater than 0
         require(_amount > 0, "Amount must be greater than 0");
+        // Check that the user has enough AAVE USDC
         require(ausdcToken.balanceOf(msg.sender) >= _amount, "Insufficient balance of aUsdc");
-
-        ausdcToken.approve(msg.sender, _amount);
-    
-        // Vérifier que l'utilisateur a autorisé le contrat à transférer les tokens
+        // Check that the user has authorized the contract to transfer the tokens
         uint256 allowance = ausdcToken.allowance(msg.sender, address(this));
         require(allowance >= _amount, "Allowance too low");
 
-        // Effectuer le transfert de Aave USDC vers ce contrat
+        // Transfer Aave USDC to this contract
         ausdcToken.transferFrom(msg.sender, address(this), _amount);
 
-        // Effectuer le retrait de USDC 
+        // Withdraw USDC from the pool  
         aavePool.withdraw(address(usdcToken), _amount, msg.sender);
 
+        // Emit an event to notify the withdrawal
         emit WithdrawnFromAave(msg.sender, _amount);
     }
 
@@ -144,6 +147,11 @@ contract D4A is ERC20, Ownable {
     ///@return The amount of usdc the user has deposit on the smart contract
     function getUserBalance(address _address) external view returns(uint) {
         return userDeposits[_address];
+    }
+
+    // Overload the decimals function to set 6 decimals
+    function decimals() public pure override returns (uint8) {
+        return 6;
     }
     
 }
