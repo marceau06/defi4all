@@ -3,8 +3,7 @@ name: Run Hardhat Tests
 on:
   push:
     branches:
-      - smart-contract-development
-      - front-end-development
+      - contract-improvements
   pull_request:
     branches:
       - main
