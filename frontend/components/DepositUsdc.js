@@ -12,68 +12,89 @@ import { parseUnits  } from "ethers";
 const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
     const [amount, setAmount] = useState()
-    const [txState, setTxState] = useState("initial"); // initial | approve | approving | deposit | depositing | final
-    const [txHash, setTxHash] = useState("0x0");
-    const { address } = useAccount()
-    const { data: hash, error, isPending, writeContract } = useWriteContract()
+    // const [txState, setTxState] = useState("initial"); // initial | approve | approving | deposit | depositing | final
+    // const [txHash, setTxHash] = useState("0x0");
+    // const { address } = useAccount()
+    // const { data: hash, error, isPending, writeContract } = useWriteContract()
 
-    const handleDeposit = async () => { 
-        console.log("In HandleDeposit()")
+     // Hook pour l'approbation
+     const {
+        data: approveData,
+        writeContract: approve,
+        isLoading: isLoadingApprove,
+        isSuccess: isSuccessApprove,
+        error: approveError,
+    } = useWriteContract();
+
+    // Hook pour le dépôt
+    const {
+        data: depositData,
+        writeContract: deposit,
+        isLoading: isLoadingDeposit,
+        isSuccess: isSuccessDeposit,
+        error: depositError,
+    } = useWriteContract();
+
+    // Fonction pour initier l'approbation
+    const handleApprove = async () => {
         try {
-            writeContract({
+            console.log("Initiating approve...");
+            await approve({
                 address: USDC_ADDRESS,
                 abi: USDC_ADDRESS_ABI,
                 functionName: 'approve',
-                args: [CONTRACT_ADDRESS, parseUnits(amount, 6)]
-            })
-            writeContract({
+                args: [CONTRACT_ADDRESS, parseUnits(amount.toString(), 6)],
+            });
+        } catch (error) {
+            console.log("Erreur lors de l'approbation :", error);
+        }
+    };
+
+    // Fonction pour initier le dépôt
+    const handleDeposit = async () => {
+        try {
+            console.log("Initiating deposit...");
+            deposit({
                 address: CONTRACT_ADDRESS,
                 abi: CONTRACT_ABI,
                 functionName: 'depositUSDC',
-                args: [parseUnits(amount, 6)]
-            })
-            // if (!approve) return;
-
-            // // Appeler d'abord l'approve pour autoriser le contrat à transférer les USDC
-            // await approve?.();
-
-            // // Ensuite, appeler la fonction de dépôt
-            // if (deposit) {
-            // await deposit?.();
-            // }
-        }
-        catch(error) {
-            console.log(error)
+                args: [parseUnits(amount.toString(), 6)],
+            });
+        } catch (error) {
+            console.log("Erreur lors du dépôt :", error);
         }
     }
 
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    })
+    // Gérer l'effet de la confirmation de la transaction de dépôt
+    useEffect(() => {
+        if (isSuccessApprove) {
+            handleDeposit();
+        }
+    }, [isSuccessApprove]);
 
     useEffect(() => {
-        if (isConfirmed) {
-            toast("Transaction successful.")
-            setAmount('')
+        if (isSuccessDeposit) {
+            console.log("hash of deposit: ", depositData)
+            toast("DEPOSIT Transaction successful.")
             refetchUserBalanceOnContract()
             refetchUserBalance()
             refetchBalanceContract()
+            setAmount('')
         }
-    }, [isConfirmed])
-
+    }, [isSuccessDeposit])
+    
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Deposit</h2>
-            {hash && <div>Transaction Hash: {hash}</div>}
-            {isConfirming && <div>Waiting for confirmation...</div>}
-            {isConfirmed && <div>Transaction confirmed.</div>}
-            {error && (
-                <div>Error: {error.shortMessage || error.message}</div>
+            <h2 className='text-2xl font-bold mb-2'>Deposit USDC into insurance</h2>
+            {depositData && <div>Transaction Hash: {depositData}</div>}
+            {isLoadingDeposit && <div>Waiting for confirmation...</div>}
+            {isSuccessDeposit && <div>Transaction confirmed.</div>}
+            {depositError && (
+                <div>Error: {depositError.shortMessage || depositError.message}</div>
             )}
             <Label>Amount in USDC: </Label>
             <Input type='number' placeholder='Amount in USDC...' value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button className="w-full" onClick={handleDeposit} disabled={isPending}>{isPending ? 'Depositing...' : 'Deposit'}</Button>
+            <Button className="w-full" onClick={handleApprove} disabled={isLoadingDeposit}>{isLoadingDeposit ? 'Depositing...' : 'Deposit'}</Button>
         </div>
     )
 }

@@ -11,60 +11,110 @@ import { parseUnits  } from "ethers"
 
 const WithdrawAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
-    const [amount, setAmount] = useState('')
+    const [amount, setAmount] = useState()
+    // const { address } = useAccount()
+    // const { data: hash, error, isPending, writeContract } = useWriteContract()
 
-    const { address } = useAccount()
+    // Hook pour l'approbation
+    const {
+        data: approveData,
+        writeContract: approve,
+        isLoading: isLoadingApprove,
+        isSuccess: isSuccessApprove,
+        error: approveError,
+    } = useWriteContract();
 
-    const { data: hash, error, isPending, writeContract } = useWriteContract()
-
-    const handleWithdraw = async () => { 
+    // Hook pour le dépôt
+    const {
+        data: withdrawFromAaveData,
+        writeContract: withdrawFromAave,
+        isLoading: isLoadingWithdrawFromAave,
+        isSuccess: isSuccessWithdrawFromAave,
+        error: withdrawFromAaveError,
+    } = useWriteContract();
+    
+    // Fonction pour initier l'approbation
+    const handleApprove = async () => {
         try {
-            writeContract({
+            console.log("Initiating approve...");
+            await approve({
                 address: AAVE_USDC_ADDRESS,
                 abi: AAVE_USDC_ADDRESS_ABI,
                 functionName: 'approve',
-                args: [CONTRACT_ADDRESS, parseUnits(amount, 6)]
-            })
-            writeContract({
+                args: [CONTRACT_ADDRESS, parseUnits(amount.toString(), 6)],
+            });
+        } catch (error) {
+            console.log("Erreur lors de l'approbation :", error);
+        }
+    };
+
+    // Fonction pour initier le dépôt
+    const handleWithdraw = async () => {
+        try {
+            console.log("Initiating withdraw...");
+            withdrawFromAave({
                 address: CONTRACT_ADDRESS,
                 abi: CONTRACT_ABI,
                 functionName: 'withdrawFromAave',
-                args: [parseUnits(amount, 6)],
-            })
-        }
-        catch(error) {
-            console.log(error)
+                args: [parseUnits(amount.toString(), 6)],
+            });
+        } catch (error) {
+            console.log("Erreur lors du dépôt :", error);
         }
     }
 
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    })
+
+
+    // const handleWithdraw = async () => { 
+    //     try {
+    //         writeContract({
+    //             address: AAVE_USDC_ADDRESS,
+    //             abi: AAVE_USDC_ADDRESS_ABI,
+    //             functionName: 'approve',
+    //             args: [CONTRACT_ADDRESS, parseUnits(amount, 6)]
+    //         })
+    //         writeContract({
+    //             address: CONTRACT_ADDRESS,
+    //             abi: CONTRACT_ABI,
+    //             functionName: 'withdrawFromAave',
+    //             args: [parseUnits(amount, 6)],
+    //         })
+    //     }
+    //     catch(error) {
+    //         console.log(error)
+    //     }
+    // }
+
+    // Gérer l'effet de la confirmation de la transaction de dépôt
+    useEffect(() => {
+        if (isSuccessApprove) {
+            handleWithdraw();
+        }
+    }, [isSuccessApprove]);
 
     useEffect(() => {
-        if (isConfirmed) {
-            console.log("Dans UseEffect")
-            toast("Transaction successful.")
-            setAmount('')
+        if (isSuccessWithdrawFromAave) {
+            console.log("hash of deposit: ", withdrawFromAaveData)
+            toast("DEPOSIT Transaction successful.")
             refetchUserBalanceOnContract()
             refetchUserBalance()
             refetchBalanceContract()
+            setAmount('')
         }
-    }, [isConfirmed])
+    }, [isSuccessWithdrawFromAave])
 
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Withdraw</h2>
-            {hash && <div>Transaction Hash: {hash}</div>}
-            {isConfirming && <div>Waiting for confirmation...</div>}
-            {isConfirmed && <div>Transaction confirmed.</div>}
-            {error && (
-                <div>Error: {error.shortMessage || error.message}</div>
+            <h2 className='text-2xl font-bold mb-2'>Withdraw from AAVE V3 Pool</h2>
+            {withdrawFromAaveData && <div>Transaction Hash: {withdrawFromAaveData}</div>}
+            {isLoadingWithdrawFromAave && <div>Waiting for confirmation...</div>}
+            {isSuccessWithdrawFromAave && <div>Transaction confirmed.</div>}
+            {withdrawFromAaveError && (
+                <div>Error: {withdrawFromAaveError.shortMessage || withdrawFromAaveError.message}</div>
             )}
             <Label>Amount in USDC to withdraw: </Label>
             <Input type='number' placeholder='Amount in USDC...' value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button className="w-full" onClick={handleWithdraw} disabled={isPending}>{isPending ? 'Withdrawing...' : 'Withdraw'}</Button>
+            <Button className="w-full" onClick={handleApprove} disabled={isLoadingWithdrawFromAave}>{isLoadingWithdrawFromAave ? 'Withdrawing...' : 'Withdraw'}</Button>
         </div>
     )
 }

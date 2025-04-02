@@ -49,7 +49,7 @@ const WithdrawUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
 
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Withdraw</h2>
+            <h2 className='text-2xl font-bold mb-2'>Withdraw USDC from insurance</h2>
             {hash && <div>Transaction Hash: {hash}</div>}
             {isConfirming && <div>Waiting for confirmation...</div>}
             {isConfirmed && <div>Transaction confirmed.</div>}

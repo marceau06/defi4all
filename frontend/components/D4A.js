@@ -45,40 +45,72 @@ const Bank = () => {
     })
 
     const getEvents = async() => {
+
         const depositEvents = await publicClient.getLogs({
-        address: CONTRACT_ADDRESS,
-        event: parseAbiItem('event Deposited(address indexed account, uint amount)'),
-        // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
-        fromBlock: 21423360n,
-        // jusqu'au dernier
-        toBlock: 'latest' // Pas besoin valeur par défaut
-    })
+            address: CONTRACT_ADDRESS,
+            event: parseAbiItem('event Deposited(address indexed account, uint amount)'),
+            // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
+            fromBlock: 21423360n,
+            // jusqu'au dernier
+            toBlock: 'latest' // Pas besoin valeur par défaut
+        })
 
-    const withdrawEvents = await publicClient.getLogs({
-        address: CONTRACT_ADDRESS,
-        event: parseAbiItem('event Withdrawn(address indexed account, uint amount)'),
-        // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
-        fromBlock: 21423360n,
-        // jusqu'au dernier
-        toBlock: 'latest' // Pas besoin valeur par défaut
-    })
+        const withdrawEvents = await publicClient.getLogs({
+            address: CONTRACT_ADDRESS,
+            event: parseAbiItem('event Withdrawn(address indexed account, uint amount)'),
+            // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
+            fromBlock: 21423360n,
+            // jusqu'au dernier
+            toBlock: 'latest' // Pas besoin valeur par défaut
+        })
 
-    const combinedEvents = depositEvents.map((event) => ({
-        type: 'Deposited',
-        address: event.args.account,
-        amount: event.args.amount,
-        blockTimestamp: Number(event.blockTimestamp)
-    })).concat(withdrawEvents.map((event) => ({
-        type: 'Withdrawn',
-        address: event.args.account,
-        amount: event.args.amount,
-        blockTimestamp: Number(event.blockTimestamp)
-    })))
-    console.log(combinedEvents)
+        const supplyAaveEvents = await publicClient.getLogs({
+          address: CONTRACT_ADDRESS,
+          event: parseAbiItem('event SuppliedToAave(address indexed account, uint amount)'),
+          // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
+          fromBlock: 21423360n,
+          // jusqu'au dernier
+          toBlock: 'latest' // Pas besoin valeur par défaut
+        })
 
-    const sortedEvents = combinedEvents.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp))
+      const withdrawAaveEvents = await publicClient.getLogs({
+          address: CONTRACT_ADDRESS,
+          event: parseAbiItem('event WithdrawnFromAave(address indexed account, uint amount)'),
+          // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
+          fromBlock: 21423360n,
+          // jusqu'au dernier
+          toBlock: 'latest' // Pas besoin valeur par défaut
+        })
 
-    setEvents(sortedEvents)
+      const combinedEvents = 
+      depositEvents.map((event) => ({
+          type: 'Deposited',
+          address: event.args.account,
+          amount: event.args.amount,
+          blockTimestamp: Number(event.blockTimestamp)
+      })).concat(withdrawEvents.map((event) => ({
+          type: 'Withdrawn',
+          address: event.args.account,
+          amount: event.args.amount,
+          blockTimestamp: Number(event.blockTimestamp)
+      }))).concat(supplyAaveEvents.map((event) => ({
+          type: 'SuppliedToAave',
+          address: event.args.account,
+          amount: event.args.amount,
+          blockTimestamp: Number(event.blockTimestamp)
+      }))).concat(withdrawAaveEvents.map((event) => ({
+          type: 'WithdrawnFromAave',
+          address: event.args.account,
+          amount: event.args.amount,
+          blockTimestamp: Number(event.blockTimestamp)
+      })))
+
+      console.log(combinedEvents)
+
+      const sortedEvents = combinedEvents.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp))
+
+      setEvents(sortedEvents)
+
   }
 
   useEffect(() => {

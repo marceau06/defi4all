@@ -1,5 +1,5 @@
 // export const CONTRACT_ADDRESS = "0xb0fBf99C983cFC6A7010d40De9aE48D2e37d49A7"; // SEPOLIA
-export const CONTRACT_ADDRESS = "0xeA2e668d430e5AA15babA2f5c5edfd4F9Ef6EB73"; // HARDHAT 
+export const CONTRACT_ADDRESS = "0x7722f5d7964a04672761cdfdC7c17B7Ac8f197b7"; // HARDHAT 
 export const CONTRACT_ABI =  [
   {
     "inputs": [
