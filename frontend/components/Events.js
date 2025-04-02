@@ -1,5 +1,5 @@
 import React from 'react'
-import { formatEther } from 'viem'
+import { formatUnits } from 'ethers'
 import { Badge } from './ui/badge'
 
 const Events = ({ events }) => {

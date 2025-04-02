@@ -1,47 +1,53 @@
 'use client'; 
+import { useEffect, useState } from 'react';
 import { useReadContract, useAccount } from "wagmi";
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const Header = () => {
 
-    const { address } = useAccount();
+    const { address, isConnected } = useAccount();
 
-    const { data: balance, isConnected, isLoading } = useReadContract({
+    const [balance, setBalance] = useState("0");
+
+    const { data, isLoading, refetch } = useReadContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: 'getUserBalance',
-        args: [address]
     })
 
-    const { data: owner, error } = useReadContract({
-        address: CONTRACT_ADDRESS,
-        abi: CONTRACT_ABI,
-        functionName: 'owner'
-    })
+    // Met à jour la balance lorsque l'utilisateur se connecte ou se déconnecte
+    useEffect(() => {
+        if (isConnected) {
+            refetch(); // Récupère la balance dès que connecté
+        } else {
+            setBalance("0"); // Réinitialise la balance si déconnecté
+        }
+    }, [isConnected, refetch]);
+
+    // Met à jour la balance chaque fois que data change
+    useEffect(() => {
+        if (data) {
+            setBalance(data.toString());
+        }
+    }, [data]);
 
 
     return (
         <div className="flex justify-between items-center p-5">
-            {
-            (isConnected) ?
+            {isConnected ? (
                 <div>
                     <span>D4A Balance: </span>
-                    {
-                        (isLoading) ? 
-                            "Loading..."
-                        :
-                            (balance !== undefined && balance > 0) ? 
-                                balance.toString() 
-                            : "0"
-                        } "D4A"
+                    {isLoading ? "Loading..." : `${balance} D4A`}
                 </div>
-            :
+            ) : (
                 "D4A DApp"
-            }
-            <div><ConnectButton showBalance={false} /></div>
+            )}
+            <div>
+                <ConnectButton showBalance={false} />
+            </div>
         </div>
-    )
+    );
 }
 
 export default Header

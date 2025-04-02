@@ -17,9 +17,9 @@ module.exports = {
       forking: {
         enabled: true,
         url: ALCHEMY_MAINNET_RPC_URL,
-        blockNumber: 21423360, // Quel bloc number ?
+        blockNumber: 22176642, // Quel bloc number ?
         initialBaseFeePerGas: 0,
-        maxFeePerGas: 80000000000 // Definir le max de gas que l'on peut mettre dans une transaction
+        maxFeePerGas: 8000000000000 // Definir le max de gas que l'on peut mettre dans une transaction
       }
     },
     // sepolia: {

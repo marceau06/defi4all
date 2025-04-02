@@ -6,9 +6,6 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
   describe("Supply", function () {
 
-
-
-
     async function deployContractSupplyTestFixture() {
 
       const [owner, addressUser] = await ethers.getSigners();
@@ -40,7 +37,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
       // Get Weth ERC20 token address
       const wethAddress = await uniswapRouter.WETH();
       // Value of eth in usdc on block number 21423360
-      const ethValueInUsdc = 3931262574;
+      const ethValueInUsdc = 1903933450;
 
       // Swap 
       await uniswapRouter.swapExactETHForTokens(
@@ -295,7 +292,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
           const d4ABalance = Number(amount)*(15/100);
           console.log("Amount usdc to supplly: ", amount);
 
-          const ownerUsdcBalanceOnTheContractBeforeDeposit = await d4A.getUserBalance(owner.address);
+          const ownerUsdcBalanceOnTheContractBeforeDeposit = await d4A.getUserBalance();
           const ownerUsdcBalanceBeforeDeposit = await usdcToken.balanceOf(owner.address);
           const contractUsdcBalanceBeforeDeposit = await usdcToken.balanceOf(d4A);
 
@@ -323,7 +320,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
           console.log("Deposit to the contract successfully made for an amount of ", amount);
 
 
-          const ownerUsdcBalanceOnTheContractAfterDeposit = await d4A.getUserBalance(owner.address);
+          const ownerUsdcBalanceOnTheContractAfterDeposit = await d4A.getUserBalance();
           const ownerUsdcBalanceAfterDeposit = await usdcToken.balanceOf(owner.address);
           const contractUsdcBalanceAfterDeposit = await usdcToken.balanceOf(d4A);
           const ownerD4ABalanceOnTheContractAfterDeposit = await d4A.balanceOf(owner.address);
@@ -368,7 +365,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
           console.log("********************* WITHDRAW DONE *********************");
           console.log("Deposit to the contract successfully made for an amount of ", amount);
 
-          const ownerUsdcBalanceOnTheContractAfterWithdraw = await d4A.getUserBalance(owner.address);
+          const ownerUsdcBalanceOnTheContractAfterWithdraw = await d4A.getUserBalance();
           const ownerUsdcBalanceAfterWithdraw = await usdcToken.balanceOf(owner.address);
 
           console.log("USDC Contract balance after WITHDRAW: ", hre.ethers.formatUnits(await usdcToken.balanceOf(d4A), 6));
