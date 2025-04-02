@@ -1,4 +1,4 @@
-const { assert, expect } = require("chai");
+const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
@@ -6,23 +6,13 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
   describe("Supply", function () {
 
-    const AAVE_POOL_ADDRESS_MAINNET = process.env.AAVE_POOL_ADDRESS_MAINNET || '';
-    const USDC_ADDRESS_MAINNET = process.env.USDC_ADDRESS_MAINNET || '';
-    const UNISWAP_ROUTER_ADDRESS_MAINNET = process.env.UNISWAP_ROUTER_ADDRESS_MAINNET || '';
-    const AUSDC_ADDRESS_MAINNET = process.env.AUSDC_ADDRESS_MAINNET || '';
-
-
     async function deployContractSupplyTestFixture() {
 
       const [owner, addressUser] = await ethers.getSigners();
-      // AAVE v3 Pool Address on Mainnet
-      const poolAddress = AAVE_POOL_ADDRESS_MAINNET; 
-      // USDC Adress on Mainnet
-      const usdcTokenAddress = USDC_ADDRESS_MAINNET; 
-      // Uniswap V2 router on Mainnet
-      const uniswapRouterAddress = UNISWAP_ROUTER_ADDRESS_MAINNET; 
-      // AAVE USDC Adress on Mainnet
-      const aUsdcTokenAddress = AUSDC_ADDRESS_MAINNET; 
+      const poolAddress = process.env.AAVE_POOL_ADDRESS_MAINNET || '';
+      const usdcTokenAddress = process.env.USDC_ADDRESS_MAINNET || '';
+      const uniswapRouterAddress = process.env.UNISWAP_ROUTER_ADDRESS_MAINNET || '';
+      const aUsdcTokenAddress = process.env.AUSDC_ADDRESS_MAINNET || '';
 
       // Deploy D4A contract
       const d4A = await hre.ethers.deployContract("D4A", [owner.address, poolAddress, usdcTokenAddress, aUsdcTokenAddress, uniswapRouterAddress])
@@ -47,7 +37,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
       // Get Weth ERC20 token address
       const wethAddress = await uniswapRouter.WETH();
       // Value of eth in usdc on block number 21423360
-      const ethValueInUsdc = 3931262574;
+      const ethValueInUsdc = 1903933450;
 
       // Swap 
       await uniswapRouter.swapExactETHForTokens(
@@ -244,11 +234,11 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         console.log("AUSDC contract balance on the pool after WITHDRAW: ",  hre.ethers.formatUnits(contractAUsdcBalanceAfterWithdraw, 8));
         console.log("ETH Owner balance after WITHDRAW: ", hre.ethers.formatUnits(ownerEthBalanceAfterWithdraw, 18));
 
-        // AUSDC Contract balance before SUPPLY
+        // AUSDC Contract balance after Withdraw
         expect(contractAUsdcBalanceAfterWithdraw).to.equal(0);
-        // USDC Owner balance before SUPPLY: Recover all the USDC that had been supplied 
+        // USDC Owner balance after Withdraw: Recover all the USDC that had been supplied 
         expect(ownerUsdcBalanceAfterWithdraw).to.equal(ethValueInUsdc);
-        // AUSDC Owner balance before SUPPLY: Should be O as we recovered all the USDC that had been supplied  
+        // AUSDC Owner balance after Withdraw: Should be O as we recovered all the USDC that had been supplied  
         expect(ownerAUsdcBalanceAfterWithdraw).to.equal(0);
       })
     })
@@ -302,7 +292,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
           const d4ABalance = Number(amount)*(15/100);
           console.log("Amount usdc to supplly: ", amount);
 
-          const ownerUsdcBalanceOnTheContractBeforeDeposit = await d4A.getUserBalance(owner.address);
+          const ownerUsdcBalanceOnTheContractBeforeDeposit = await d4A.getUserBalance();
           const ownerUsdcBalanceBeforeDeposit = await usdcToken.balanceOf(owner.address);
           const contractUsdcBalanceBeforeDeposit = await usdcToken.balanceOf(d4A);
 
@@ -330,7 +320,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
           console.log("Deposit to the contract successfully made for an amount of ", amount);
 
 
-          const ownerUsdcBalanceOnTheContractAfterDeposit = await d4A.getUserBalance(owner.address);
+          const ownerUsdcBalanceOnTheContractAfterDeposit = await d4A.getUserBalance();
           const ownerUsdcBalanceAfterDeposit = await usdcToken.balanceOf(owner.address);
           const contractUsdcBalanceAfterDeposit = await usdcToken.balanceOf(d4A);
           const ownerD4ABalanceOnTheContractAfterDeposit = await d4A.balanceOf(owner.address);
@@ -375,7 +365,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
           console.log("********************* WITHDRAW DONE *********************");
           console.log("Deposit to the contract successfully made for an amount of ", amount);
 
-          const ownerUsdcBalanceOnTheContractAfterWithdraw = await d4A.getUserBalance(owner.address);
+          const ownerUsdcBalanceOnTheContractAfterWithdraw = await d4A.getUserBalance();
           const ownerUsdcBalanceAfterWithdraw = await usdcToken.balanceOf(owner.address);
 
           console.log("USDC Contract balance after WITHDRAW: ", hre.ethers.formatUnits(await usdcToken.balanceOf(d4A), 6));

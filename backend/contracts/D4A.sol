@@ -145,13 +145,21 @@ contract D4A is ERC20, Ownable {
 
     ///@notice Allows to get the amount of usdc the user has deposit on the smart contract 
     ///@return The amount of usdc the user has deposit on the smart contract
-    function getUserBalance(address _address) external view returns(uint) {
-        return userDeposits[_address];
+    function getUserBalance() external view returns(uint256) {
+        return userDeposits[msg.sender];
     }
 
     // Overload the decimals function to set 6 decimals
     function decimals() public pure override returns (uint8) {
         return 6;
+    }
+
+    function getUserAddress() external view returns(address) {
+        return msg.sender;
+    }
+
+    function getUsdcBalanceOfUser() external view returns(uint256) {
+        return usdcToken.balanceOf(msg.sender);
     }
     
 }
