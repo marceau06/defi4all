@@ -8,8 +8,11 @@ import { useState, useEffect } from 'react'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/constants'
 import { publicClient } from '@/utils/client'
 import Events from '@/components/Events'
+import GetBalance from '@/components/GetBalance'
 import DepositUsdc from '@/components/DepositUsdc'
-import GetBalanceUsdc from '@/components/GetBalanceUsdc'
+import WithdrawUsdc from '@/components/WithdrawUsdc'
+import SupplyAave from '@/components/SupplyAave'
+import WithdrawAave from '@/components/WithdrawAave'
 
 const Bank = () => {
 
@@ -17,7 +20,7 @@ const Bank = () => {
 
     const [events, setEvents] = useState([])
 
-    const { data: balance, isPending, error, refetch } = useReadContract({
+    const { data: userBalanceOnContract, isPending, error, refetch: refetchUserBalanceOnContract } = useReadContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: 'getUserBalance'
@@ -29,13 +32,13 @@ const Bank = () => {
         functionName: 'getUserAddress'
     })
 
-    const { data: usdcBalanceOfUser } = useReadContract({
+    const { data: usdcBalanceOfUser, refetch: refetchUserBalance } = useReadContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: 'getUsdcBalanceOfUser'
     })
 
-    const { data: balanceContract } = useReadContract({
+    const { data: balanceContract, refetch: refetchBalanceContract } = useReadContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: 'getUsdcBalance'
@@ -45,7 +48,7 @@ const Bank = () => {
         const depositEvents = await publicClient.getLogs({
         address: CONTRACT_ADDRESS,
         event: parseAbiItem('event Deposited(address indexed account, uint amount)'),
-        // du 7895383 bloc
+        // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
         fromBlock: 21423360n,
         // jusqu'au dernier
         toBlock: 'latest' // Pas besoin valeur par défaut
@@ -54,7 +57,7 @@ const Bank = () => {
     const withdrawEvents = await publicClient.getLogs({
         address: CONTRACT_ADDRESS,
         event: parseAbiItem('event Withdrawn(address indexed account, uint amount)'),
-        // du premier bloc
+        // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
         fromBlock: 21423360n,
         // jusqu'au dernier
         toBlock: 'latest' // Pas besoin valeur par défaut
@@ -92,19 +95,15 @@ const Bank = () => {
       {isConnected ? (
         <div>
           <p>
-            balanceContract: {balanceContract.toString()} 
+            msg.sender: {msgSenderOnContract}
           </p>
-          <p>
-            Address: {address}
-          </p>
-          <p>
-            msgSenderOnContract: {msgSenderOnContract}
-          </p>
-          <p>
-            usdcBalanceOfUser: {usdcBalanceOfUser.toString()}
-          </p>
-          <GetBalanceUsdc balance={balance} isPending={isPending} error={error} />
-          <DepositUsdc refetch={refetch} events={events} />
+          userBalanceOnContract: <GetBalance balance={userBalanceOnContract} isPending={isPending} error={error} />
+          usdcBalanceOfUser: <GetBalance balance={usdcBalanceOfUser} isPending={isPending} error={error} />
+          balanceContract: <GetBalance balance={balanceContract} isPending={isPending} error={error} />
+          <DepositUsdc refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={events} />
+          <WithdrawUsdc refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={events} />
+          <SupplyAave refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={events} />
+          <WithdrawAave refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={events} />
           <Events events={events} />
         </div>
       ) : (

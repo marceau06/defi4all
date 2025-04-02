@@ -9,11 +9,9 @@ import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { parseUnits  } from "ethers";
 
-const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
+const SupplyAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
     const [amount, setAmount] = useState()
-    const [txState, setTxState] = useState("initial"); // initial | approve | approving | deposit | depositing | final
-    const [txHash, setTxHash] = useState("0x0");
     const { address } = useAccount()
     const { data: hash, error, isPending, writeContract } = useWriteContract()
 
@@ -29,7 +27,7 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
             writeContract({
                 address: CONTRACT_ADDRESS,
                 abi: CONTRACT_ABI,
-                functionName: 'depositUSDC',
+                functionName: 'supplyToAave',
                 args: [parseUnits(amount, 6)]
             })
             // if (!approve) return;
@@ -64,7 +62,7 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
 
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Deposit</h2>
+            <h2 className='text-2xl font-bold mb-2'>Supply to AAVE V3 Pool</h2>
             {hash && <div>Transaction Hash: {hash}</div>}
             {isConfirming && <div>Waiting for confirmation...</div>}
             {isConfirmed && <div>Transaction confirmed.</div>}
@@ -78,4 +76,4 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
     )
 }
 
-export default DepositUsdc
+export default SupplyAave

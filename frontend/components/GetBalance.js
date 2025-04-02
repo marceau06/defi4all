@@ -1,6 +1,6 @@
 import { formatUnits  } from "ethers";
 
-const GetBalanceUsdc = ({ balance, isPending, error }) => {
+const GetBalance = ({ balance, isPending, error,  }) => {
   return (
     <div>
         {isPending && <div>Loading...</div>}
@@ -10,4 +10,4 @@ const GetBalanceUsdc = ({ balance, isPending, error }) => {
   )
 }
 
-export default GetBalanceUsdc
+export default GetBalance

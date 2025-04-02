@@ -3,44 +3,34 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from './ui/label'
 import { toast } from "sonner"
-import { useWriteContract, useWaitForTransactionReceipt,useContractWrite, usePrepareContractWrite } from 'wagmi'
-import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@/constants'
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { CONTRACT_ADDRESS, CONTRACT_ABI, AAVE_USDC_ADDRESS, AAVE_USDC_ADDRESS_ABI } from '@/constants'
 import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
-import { parseUnits  } from "ethers";
+import { parseUnits  } from "ethers"
 
-const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
+const WithdrawAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
-    const [amount, setAmount] = useState()
-    const [txState, setTxState] = useState("initial"); // initial | approve | approving | deposit | depositing | final
-    const [txHash, setTxHash] = useState("0x0");
+    const [amount, setAmount] = useState('')
+
     const { address } = useAccount()
+
     const { data: hash, error, isPending, writeContract } = useWriteContract()
 
-    const handleDeposit = async () => { 
-        console.log("In HandleDeposit()")
+    const handleWithdraw = async () => { 
         try {
             writeContract({
-                address: USDC_ADDRESS,
-                abi: USDC_ADDRESS_ABI,
+                address: AAVE_USDC_ADDRESS,
+                abi: AAVE_USDC_ADDRESS_ABI,
                 functionName: 'approve',
                 args: [CONTRACT_ADDRESS, parseUnits(amount, 6)]
             })
             writeContract({
                 address: CONTRACT_ADDRESS,
                 abi: CONTRACT_ABI,
-                functionName: 'depositUSDC',
-                args: [parseUnits(amount, 6)]
+                functionName: 'withdrawFromAave',
+                args: [parseUnits(amount, 6)],
             })
-            // if (!approve) return;
-
-            // // Appeler d'abord l'approve pour autoriser le contrat à transférer les USDC
-            // await approve?.();
-
-            // // Ensuite, appeler la fonction de dépôt
-            // if (deposit) {
-            // await deposit?.();
-            // }
         }
         catch(error) {
             console.log(error)
@@ -54,6 +44,7 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
 
     useEffect(() => {
         if (isConfirmed) {
+            console.log("Dans UseEffect")
             toast("Transaction successful.")
             setAmount('')
             refetchUserBalanceOnContract()
@@ -64,18 +55,18 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
 
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Deposit</h2>
+            <h2 className='text-2xl font-bold mb-2'>Withdraw</h2>
             {hash && <div>Transaction Hash: {hash}</div>}
             {isConfirming && <div>Waiting for confirmation...</div>}
             {isConfirmed && <div>Transaction confirmed.</div>}
             {error && (
                 <div>Error: {error.shortMessage || error.message}</div>
             )}
-            <Label>Amount in USDC: </Label>
+            <Label>Amount in USDC to withdraw: </Label>
             <Input type='number' placeholder='Amount in USDC...' value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button className="w-full" onClick={handleDeposit} disabled={isPending}>{isPending ? 'Depositing...' : 'Deposit'}</Button>
+            <Button className="w-full" onClick={handleWithdraw} disabled={isPending}>{isPending ? 'Withdrawing...' : 'Withdraw'}</Button>
         </div>
     )
 }
 
-export default DepositUsdc
+export default WithdrawAave;
