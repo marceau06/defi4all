@@ -8,7 +8,7 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@
 import { useState, useEffect } from 'react'
 import { parseUnits  } from "ethers";
 
-const SupplyAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
+const SupplyAave = ({}) => {
 
     const [amount, setAmount] = useState()
 
@@ -73,26 +73,32 @@ const SupplyAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchB
     useEffect(() => {
         if (isSuccessDeposit) {
             console.log("hash of deposit: ", depositData)
-            toast("DEPOSIT Transaction successful.")
-            refetchUserBalanceOnContract()
-            refetchUserBalance()
-            refetchBalanceContract()
+            toast("SUPPLY TO AAVE: Transaction successful", {
+                description: "Hash: " + depositData,
+            })
             setAmount('')
         }
     }, [isSuccessDeposit])
 
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Supply to AAVE V3 Pool</h2>
-            {depositData && <div>Transaction Hash: {depositData}</div>}
+            <h2 className='text-2xl font-bold mb-8'>Supply to AAVE V3 Pool</h2>
             {isLoadingDeposit && <div>Waiting for confirmation...</div>}
-            {isSuccessDeposit && <div>Transaction confirmed.</div>}
             {depositError && (
                 <div>Error: {depositError.shortMessage || depositError.message}</div>
             )}
-            <Label>Amount in USDC: </Label>
-            <Input type='number' placeholder='Amount in USDC...' value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button className="w-full" onClick={handleApprove} disabled={isLoadingDeposit}>{isLoadingDeposit ? 'Depositing...' : 'Deposit'}</Button>
+            <Input 
+                type='number' 
+                className="bg-emerald-900/20 focus:ring-emerald-500 focus:border-emerald-500 block border border-emerald-300 rounded-md w-full" 
+                placeholder='Amount in USDC...' 
+                value={amount} 
+                onChange={(e) => setAmount(e.target.value)} 
+            />
+            <Button             
+                className="w-3xl mt-4 border border-transparent shadow-sm font-medium rounded-md text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-offset-4 focus:ring-emerald-500"
+                onClick={handleApprove} 
+                disabled={isLoadingDeposit}>{isLoadingDeposit ? 'Depositing USDC...' : 'Supply USDC to Aave pool'}
+            </Button>
         </div>
     )
 }

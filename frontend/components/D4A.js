@@ -13,12 +13,17 @@ import DepositUsdc from '@/components/DepositUsdc'
 import WithdrawUsdc from '@/components/WithdrawUsdc'
 import SupplyAave from '@/components/SupplyAave'
 import WithdrawAave from '@/components/WithdrawAave'
+import { useTheme } from "next-themes"
 
 const Bank = () => {
 
+    useTheme("dark");
+
     const { isConnected, address } = useAccount()
 
-    const [events, setEvents] = useState([])
+    const [eventsUsdc, setEventsUsdc] = useState([])
+    const [eventsAave, setEventsAave] = useState([])
+
 
     const { data: userBalanceOnContract, isPending, error, refetch: refetchUserBalanceOnContract } = useReadContract({
         address: CONTRACT_ADDRESS,
@@ -82,7 +87,7 @@ const Bank = () => {
           toBlock: 'latest' // Pas besoin valeur par défaut
         })
 
-      const combinedEvents = 
+      const combinedEventInsurance = 
       depositEvents.map((event) => ({
           type: 'Deposited',
           address: event.args.account,
@@ -93,23 +98,29 @@ const Bank = () => {
           address: event.args.account,
           amount: event.args.amount,
           blockTimestamp: Number(event.blockTimestamp)
-      }))).concat(supplyAaveEvents.map((event) => ({
+      })))
+
+      const combinedEventsAave = 
+      supplyAaveEvents.map((event) => ({
           type: 'SuppliedToAave',
-          address: event.args.account,
-          amount: event.args.amount,
-          blockTimestamp: Number(event.blockTimestamp)
-      }))).concat(withdrawAaveEvents.map((event) => ({
+            address: event.args.account,
+            amount: event.args.amount,
+            blockTimestamp: Number(event.blockTimestamp)
+        })).concat(withdrawAaveEvents.map((event) => ({
           type: 'WithdrawnFromAave',
           address: event.args.account,
           amount: event.args.amount,
           blockTimestamp: Number(event.blockTimestamp)
-      })))
+        })))  
 
-      console.log(combinedEvents)
+      const sortedEventsUsdc = combinedEventInsurance.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp))
+      const sortedEventsAave = combinedEventsAave.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp))
 
-      const sortedEvents = combinedEvents.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp))
+      console.log(sortedEventsUsdc)
+      console.log(sortedEventsAave)
 
-      setEvents(sortedEvents)
+      setEventsUsdc(sortedEventsUsdc)
+      setEventsAave(sortedEventsAave)
 
   }
 
@@ -123,28 +134,33 @@ const Bank = () => {
   }, [address])
 
   return (
-    <>
+    <div className="flex flex-row items-stretch justify-center min-h-screen">
       {isConnected ? (
-        <div>
-          <p>
-            msg.sender: {msgSenderOnContract}
-          </p>
-          userBalanceOnContract: <GetBalance balance={userBalanceOnContract} isPending={isPending} error={error} />
-          usdcBalanceOfUser: <GetBalance balance={usdcBalanceOfUser} isPending={isPending} error={error} />
-          balanceContract: <GetBalance balance={balanceContract} isPending={isPending} error={error} />
-          <DepositUsdc refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={events} />
-          <WithdrawUsdc refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={events} />
-          <SupplyAave refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={events} />
-          <WithdrawAave refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={events} />
-          <Events events={events} />
-        </div>
+        <>
+          <div className="flex-1 text-center border-r border-gray-300 ">
+              <h1 className='text-2xl font-bold mb-2'>Insurance</h1>
+              <div className="pl-10 pr-10">
+                <DepositUsdc refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={eventsUsdc} />
+                <WithdrawUsdc refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={eventsUsdc} />
+              </div>
+              <Events events={eventsUsdc} />
+          </div>
+          <div className="flex-1 text-center border-r border-gray-300 ">
+              <h1 className='text-2xl font-bold mb-2'>AAVE</h1>
+              <div className="px-10">
+                <SupplyAave events={eventsAave} />
+                <WithdrawAave events={eventsAave} />
+              </div>
+              <Events events={eventsAave} />
+          </div>
+        </>
       ) : (
-        <Alert className='bg-yellow-100'>
+        <Alert className="bg-yellow-100 text-center flex-1" >
           <AlertTitle>Not connected</AlertTitle>
           <AlertDescription>Please connect your wallet to continue</AlertDescription>
         </Alert>
       )}
-    </>
+    </div>
   )
 }
 

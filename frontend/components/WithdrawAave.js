@@ -8,7 +8,7 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI, AAVE_USDC_ADDRESS, AAVE_USDC_ADDRESS_AB
 import { useState, useEffect } from 'react'
 import { parseUnits  } from "ethers"
 
-const WithdrawAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
+const WithdrawAave = ({}) => {
 
     const [amount, setAmount] = useState()
 
@@ -72,26 +72,37 @@ const WithdrawAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
     useEffect(() => {
         if (isSuccessWithdrawFromAave) {
             console.log("hash of deposit: ", withdrawFromAaveData)
-            toast("DEPOSIT Transaction successful.")
-            refetchUserBalanceOnContract()
-            refetchUserBalance()
-            refetchBalanceContract()
+            toast("WITHDRAW FROM AAVE: Transaction successful", {
+                description: "Hash: " + withdrawFromAaveData,
+            })
             setAmount('')
         }
     }, [isSuccessWithdrawFromAave])
 
+    useEffect(() => {
+        if (withdrawFromAaveError) {
+            toast("Error: Transaction failed", {
+                description: "Cause: " + withdrawFromAaveError,
+            })
+        }
+    }, [withdrawFromAaveError])
+
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Withdraw from AAVE V3 Pool</h2>
-            {withdrawFromAaveData && <div>Transaction Hash: {withdrawFromAaveData}</div>}
+            <h2 className='text-2xl font-bold mb-8'>Withdraw from AAVE V3 Pool</h2>
             {isLoadingWithdrawFromAave && <div>Waiting for confirmation...</div>}
-            {isSuccessWithdrawFromAave && <div>Transaction confirmed.</div>}
-            {withdrawFromAaveError && (
-                <div>Error: {withdrawFromAaveError.shortMessage || withdrawFromAaveError.message}</div>
-            )}
-            <Label>Amount in USDC to withdraw: </Label>
-            <Input type='number' placeholder='Amount in USDC...' value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button className="w-full" onClick={handleApprove} disabled={isLoadingWithdrawFromAave}>{isLoadingWithdrawFromAave ? 'Withdrawing...' : 'Withdraw'}</Button>
+        <Input 
+            type='number' 
+            className="bg-emerald-900/20 focus:ring-emerald-500 focus:border-emerald-500 block border border-emerald-300 rounded-md w-full" 
+            placeholder='Amount in USDC...' 
+            value={amount} 
+            onChange={(e) => setAmount(e.target.value)} 
+        />
+        <Button             
+            className="w-3xl mt-4 border border-transparent shadow-sm font-medium rounded-md text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-offset-4 focus:ring-emerald-500"
+            onClick={handleApprove} 
+            disabled={isLoadingWithdrawFromAave}>{isLoadingWithdrawFromAave ? 'Withdrawing USDC...' : 'Withdraw USDC from Aave pool'}
+        </Button>
         </div>
     )
 }

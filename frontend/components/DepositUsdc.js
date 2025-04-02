@@ -1,7 +1,7 @@
 'use client';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Label } from './ui/label'
+import { Label } from '@/components/ui/label'
 import { toast } from "sonner"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@/constants'
@@ -73,7 +73,9 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
     useEffect(() => {
         if (isSuccessDeposit) {
             console.log("hash of deposit: ", depositData)
-            toast("DEPOSIT Transaction successful.")
+            toast("DEPOSIT Transaction successful", {
+                description: "Hash: " + depositData,
+            })
             refetchUserBalanceOnContract()
             refetchUserBalance()
             refetchBalanceContract()
@@ -83,16 +85,23 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
     
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Deposit USDC into insurance</h2>
-            {depositData && <div>Transaction Hash: {depositData}</div>}
+            <h2 className='text-2xl font-bold mb-8'>Deposit USDC into insurance</h2>
             {isLoadingDeposit && <div>Waiting for confirmation...</div>}
-            {isSuccessDeposit && <div>Transaction confirmed.</div>}
             {depositError && (
                 <div>Error: {depositError.shortMessage || depositError.message}</div>
             )}
-            <Label>Amount in USDC: </Label>
-            <Input type='number' placeholder='Amount in USDC...' value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button className="w-full" onClick={handleApprove} disabled={isLoadingDeposit}>{isLoadingDeposit ? 'Depositing...' : 'Deposit'}</Button>
+            <Input 
+                type='number' 
+                className="bg-emerald-900/20 focus:ring-emerald-500 focus:border-emerald-500 block border border-emerald-300 rounded-md w-full" 
+                placeholder='Amount in USDC...' 
+                value={amount} 
+                onChange={(e) => setAmount(e.target.value)} 
+            />
+            <Button             
+                className="w-3xl mt-4 border border-transparent shadow-sm font-medium rounded-md text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-offset-4 focus:ring-emerald-500"
+                onClick={handleApprove} 
+                disabled={isLoadingDeposit}>{isLoadingDeposit ? 'Depositing USDC...' : 'Deposit USDC on Insurance'}
+            </Button>
         </div>
     )
 }

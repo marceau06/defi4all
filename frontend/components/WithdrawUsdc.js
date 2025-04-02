@@ -36,8 +36,9 @@ const WithdrawUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
 
     useEffect(() => {
         if (isConfirmed) {
-            console.log("Dans UseEffect")
-            toast("Transaction successful.")
+            toast("WITHDRAW USDC: Transaction successful", {
+                description: "Hash: " + hash,
+            })
             setAmount('')
             refetchUserBalanceOnContract()
             refetchUserBalance()
@@ -45,18 +46,30 @@ const WithdrawUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
         }
     }, [isConfirmed])
 
+    useEffect(() => {
+        if (error) {
+            toast("Error: Transaction failed", {
+                description: "Hash: " + hash + "  Cause: " + error,
+            })
+        }
+    }, [error])
+
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-2'>Withdraw USDC from insurance</h2>
-            {hash && <div>Transaction Hash: {hash}</div>}
+            <h2 className='text-2xl font-bold mb-8'>Withdraw USDC from insurance</h2>
             {isConfirming && <div>Waiting for confirmation...</div>}
-            {isConfirmed && <div>Transaction confirmed.</div>}
-            {error && (
-                <div>Error: {error.shortMessage || error.message}</div>
-            )}
-            <Label>Amount in USDC to withdraw: </Label>
-            <Input type='number' placeholder='Amount in USDC...' value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button className="w-full" onClick={handleWithdraw} disabled={isPending}>{isPending ? 'Withdrawing...' : 'Withdraw'}</Button>
+            <Input 
+                type='number' 
+                className="bg-emerald-900/20 focus:ring-emerald-500 focus:border-emerald-500 block border border-emerald-300 rounded-md w-full" 
+                placeholder='Amount in USDC...' 
+                value={amount} 
+                onChange={(e) => setAmount(e.target.value)} 
+            />
+            <Button             
+                className="w-3xl mt-4 border border-transparent shadow-sm font-medium rounded-md text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-offset-4 focus:ring-emerald-500"
+                onClick={handleWithdraw} 
+                disabled={isConfirming}>{isConfirming ? 'Depositing USDC...' : 'Withdraw USDC from Insurance'}
+            </Button>
         </div>
     )
 }

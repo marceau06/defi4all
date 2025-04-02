@@ -7,13 +7,13 @@ import '@rainbow-me/rainbowkit/styles.css';
 
 export default function RootLayout({ children }) {
   return (
-    <html>
+    <html className="dark" lang="en" suppressHydrationWarning>
       <body>
         <Providers>
-          <Header />
-            {children}
-          <Footer />
-          <Toaster />
+            <Header />
+              {children}
+            <Footer />
+            <Toaster />
       </Providers>
       </body>
     </html>
