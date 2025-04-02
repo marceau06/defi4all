@@ -3,27 +3,19 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from './ui/label'
 import { toast } from "sonner"
-import { useWriteContract, useWaitForTransactionReceipt,useContractWrite, usePrepareContractWrite } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@/constants'
 import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
 import { parseUnits  } from "ethers";
 
 const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
     const [amount, setAmount] = useState()
-    // const [txState, setTxState] = useState("initial"); // initial | approve | approving | deposit | depositing | final
-    // const [txHash, setTxHash] = useState("0x0");
-    // const { address } = useAccount()
-    // const { data: hash, error, isPending, writeContract } = useWriteContract()
 
      // Hook pour l'approbation
      const {
-        data: approveData,
-        writeContract: approve,
-        isLoading: isLoadingApprove,
-        isSuccess: isSuccessApprove,
-        error: approveError,
+        data: hash,
+        writeContract: approve
     } = useWriteContract();
 
     // Hook pour le dépôt
@@ -32,23 +24,28 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
         writeContract: deposit,
         isLoading: isLoadingDeposit,
         isSuccess: isSuccessDeposit,
-        error: depositError,
+        error: depositError
     } = useWriteContract();
 
     // Fonction pour initier l'approbation
     const handleApprove = async () => {
         try {
             console.log("Initiating approve...");
-            await approve({
+            approve({
                 address: USDC_ADDRESS,
                 abi: USDC_ADDRESS_ABI,
                 functionName: 'approve',
-                args: [CONTRACT_ADDRESS, parseUnits(amount.toString(), 6)],
+                args: [CONTRACT_ADDRESS, parseUnits(amount.toString(), 6)]
             });
         } catch (error) {
             console.log("Erreur lors de l'approbation :", error);
         }
     };
+
+    // Suivre la transaction d'approbation
+    const { isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({
+        hash,
+    })
 
     // Fonction pour initier le dépôt
     const handleDeposit = async () => {
@@ -67,10 +64,11 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
 
     // Gérer l'effet de la confirmation de la transaction de dépôt
     useEffect(() => {
-        if (isSuccessApprove) {
+        console.log(isApproveConfirmed)
+        if (isApproveConfirmed) {
             handleDeposit();
         }
-    }, [isSuccessApprove]);
+    }, [isApproveConfirmed]);
 
     useEffect(() => {
         if (isSuccessDeposit) {

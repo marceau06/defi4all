@@ -3,28 +3,20 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from './ui/label'
 import { toast } from "sonner"
-import { writeContract, useWriteContract, useWaitForTransactionReceipt,waitForTransactionReceipt, usePrepareContractWrite } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@/constants'
 import { useState, useEffect } from 'react'
-import { useConfig, useAccount } from 'wagmi'
 import { parseUnits  } from "ethers";
 
 const SupplyAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
     const [amount, setAmount] = useState()
-    // const { address } = useAccount()
-    // const { writeContract } = useWriteContract()
-    // const [approveTxHash, setApproveTxHash] = useState(null); // hash pour approve
-    // const [depositTxHash, setDepositTxHash] = useState(null); // hash pour deposit
-    // const config = useConfig();
 
     // Hook pour l'approbation
     const {
-        data: approveData,
+        data: hash,
         writeContract: approve,
-        isLoading: isLoadingApprove,
-        isSuccess: isSuccessApprove,
-        error: approveError,
+
     } = useWriteContract();
 
     // Hook pour le dépôt
@@ -40,7 +32,7 @@ const SupplyAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchB
     const handleApprove = async () => {
         try {
             console.log("Initiating approve...");
-            await approve({
+            approve({
                 address: USDC_ADDRESS,
                 abi: USDC_ADDRESS_ABI,
                 functionName: 'approve',
@@ -50,6 +42,11 @@ const SupplyAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchB
             console.log("Erreur lors de l'approbation :", error);
         }
     };
+
+    // Suivre la transaction d'approbation
+    const { isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({
+        hash,
+    })
 
     // Fonction pour initier le dépôt
     const handleDeposit = async () => {
@@ -68,10 +65,10 @@ const SupplyAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchB
 
     // Gérer l'effet de la confirmation de la transaction de dépôt
     useEffect(() => {
-        if (isSuccessApprove) {
+        if (isApproveConfirmed) {
             handleDeposit();
         }
-    }, [isSuccessApprove]);
+    }, [isApproveConfirmed]);
 
     useEffect(() => {
         if (isSuccessDeposit) {

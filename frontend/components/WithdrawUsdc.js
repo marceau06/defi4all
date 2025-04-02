@@ -13,8 +13,6 @@ const WithdrawUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
 
     const [amount, setAmount] = useState('')
 
-    const { address } = useAccount()
-
     const { data: hash, error, isPending, writeContract } = useWriteContract()
 
     const handleWithdraw = async () => { 

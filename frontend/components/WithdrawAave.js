@@ -6,22 +6,16 @@ import { toast } from "sonner"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, AAVE_USDC_ADDRESS, AAVE_USDC_ADDRESS_ABI } from '@/constants'
 import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
 import { parseUnits  } from "ethers"
 
 const WithdrawAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
     const [amount, setAmount] = useState()
-    // const { address } = useAccount()
-    // const { data: hash, error, isPending, writeContract } = useWriteContract()
 
     // Hook pour l'approbation
     const {
-        data: approveData,
+        data: hash,
         writeContract: approve,
-        isLoading: isLoadingApprove,
-        isSuccess: isSuccessApprove,
-        error: approveError,
     } = useWriteContract();
 
     // Hook pour le dépôt
@@ -37,7 +31,7 @@ const WithdrawAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
     const handleApprove = async () => {
         try {
             console.log("Initiating approve...");
-            await approve({
+            approve({
                 address: AAVE_USDC_ADDRESS,
                 abi: AAVE_USDC_ADDRESS_ABI,
                 functionName: 'approve',
@@ -47,6 +41,11 @@ const WithdrawAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
             console.log("Erreur lors de l'approbation :", error);
         }
     };
+
+    // Suivre la transaction d'approbation
+    const { isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({
+        hash,
+    })
 
     // Fonction pour initier le dépôt
     const handleWithdraw = async () => {
@@ -63,34 +62,12 @@ const WithdrawAave = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
         }
     }
 
-
-
-    // const handleWithdraw = async () => { 
-    //     try {
-    //         writeContract({
-    //             address: AAVE_USDC_ADDRESS,
-    //             abi: AAVE_USDC_ADDRESS_ABI,
-    //             functionName: 'approve',
-    //             args: [CONTRACT_ADDRESS, parseUnits(amount, 6)]
-    //         })
-    //         writeContract({
-    //             address: CONTRACT_ADDRESS,
-    //             abi: CONTRACT_ABI,
-    //             functionName: 'withdrawFromAave',
-    //             args: [parseUnits(amount, 6)],
-    //         })
-    //     }
-    //     catch(error) {
-    //         console.log(error)
-    //     }
-    // }
-
     // Gérer l'effet de la confirmation de la transaction de dépôt
     useEffect(() => {
-        if (isSuccessApprove) {
+        if (isApproveConfirmed) {
             handleWithdraw();
         }
-    }, [isSuccessApprove]);
+    }, [isApproveConfirmed]);
 
     useEffect(() => {
         if (isSuccessWithdrawFromAave) {
