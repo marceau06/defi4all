@@ -2,6 +2,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
+const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
   
 
   describe("Supply", function () {
@@ -172,10 +173,11 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         // Use USDC approve to the contract to be able to transfer USDC tokens
         await usdcToken.approve(d4A, amount);
 
+        const latestBlock = await ethers.provider.getBlock("latest");
         // Do the supply
         await expect(d4A.supplyToAave(amount))
           .to.emit(d4A, "SuppliedToAave")
-          .withArgs(owner.address, amount);
+          .withArgs(owner.address, amount, anyValue); // We accept any value as `when` arg
         
         console.log("********************* SUPPLY DONE *********************");
         console.log("Deposit to the pool successfully made for an amount of ", amount);
@@ -199,25 +201,29 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         // USDC Owner balance after SUPPLY
         // 2931262574 - 50000000 = 2881262574
         expect(ownerUsdcBalanceAfterSupply).to.equal(ethValueInUsdc - Number(amount));
-        // AUSDC Owner balance after SUPPLY         
-        expect(ownerAUsdcBalancefterSupply).to.equal(amount);
+        // AUSDC Owner balance after SUPPLY    
+        // 0.5% of the amount goes to insurance
+        const rate = 5 / 1000;
+        const reduction = Number(amount) * rate;
+        const reducedAmount = Number(amount) - reduction;
+        expect(ownerAUsdcBalancefterSupply).to.equal(reducedAmount);
 
         console.log("********************* WITHDRAWAL TEST *********************");
 
         // Should revert when allowance is less than the amount to supply
-        await expect(d4A.withdrawFromAave(amount))
+        await expect(d4A.withdrawFromAave(reducedAmount))
                 .to.be.revertedWith("Allowance too low");
 
         // Use AaveUSDC approve to the contract to be able to transfer AaveUSDC tokens
-        await aUsdcToken.approve(d4A, amount);
+        await aUsdcToken.approve(d4A, reducedAmount);
 
         // Do the withdraw
-        await expect(d4A.withdrawFromAave(amount))
+        await expect(d4A.withdrawFromAave(reducedAmount))
                 .to.emit(d4A, "WithdrawnFromAave")
-                .withArgs(owner.address, amount);
+                .withArgs(owner.address, reducedAmount, anyValue); // We accept any value as `when` arg
 
         console.log("********************* WITHDRAW DONE *********************");
-        console.log("Withdrawal to the pool successfully made for an amount of ", amount);
+        console.log("Withdrawal to the pool successfully made for an amount of ", reducedAmount);
 
         const contractAUsdcBalanceAfterWithdraw = await aUsdcToken.balanceOf(d4A);
         const contractEthBalanceAfterWithdraw = await ethers.provider.getBalance(d4A);
@@ -236,8 +242,8 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
         // AUSDC Contract balance after Withdraw
         expect(contractAUsdcBalanceAfterWithdraw).to.equal(0);
-        // USDC Owner balance after Withdraw: Recover all the USDC that had been supplied 
-        expect(ownerUsdcBalanceAfterWithdraw).to.equal(ethValueInUsdc);
+        // USDC Owner balance after Withdraw: Recover the USDC that had been supplied - the reduction of 0.5%
+        expect(ownerUsdcBalanceAfterWithdraw).to.equal(Number(ownerUsdcBalanceAfterSupply) + Number(reducedAmount));
         // AUSDC Owner balance after Withdraw: Should be O as we recovered all the USDC that had been supplied  
         expect(ownerAUsdcBalanceAfterWithdraw).to.equal(0);
       })
@@ -314,7 +320,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
           // Deposit tokens into the contract
           await expect(d4A.depositUSDC(amount))
                   .to.emit(d4A, "Deposited")
-                  .withArgs(owner.address, amount);
+                  .withArgs(owner.address, amount, anyValue); // We accept any value as `when` arg
           console.log("USDC deposited");
           console.log("********************* DEPOSIT DONE *********************");
           console.log("Deposit to the contract successfully made for an amount of ", amount);
@@ -359,9 +365,9 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
           console.log("********************* WITHDRAW TEST *********************");
           // withdrawUSDC
-          await expect(d4A.withdrawUSDC(1000000000))
+          await expect(d4A.withdrawUSDC(amount))
                   .to.emit(d4A, "Withdrawn")
-                  .withArgs(owner.address, 1000000000);
+                  .withArgs(owner.address, amount, anyValue); // We accept any value as `when` arg
           console.log("********************* WITHDRAW DONE *********************");
           console.log("Deposit to the contract successfully made for an amount of ", amount);
 

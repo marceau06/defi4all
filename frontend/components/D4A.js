@@ -5,7 +5,7 @@ import { useReadContract } from 'wagmi';
 
 import { parseAbiItem } from 'viem'
 import { useState, useEffect } from 'react'
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/constants'
+import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI } from '@/constants'
 import { publicClient } from '@/utils/client'
 import Events from '@/components/Events'
 import GetBalance from '@/components/GetBalance'
@@ -17,7 +17,6 @@ import { useTheme } from "next-themes"
 
 const Bank = () => {
 
-    useTheme("dark");
 
     const { isConnected, address } = useAccount()
 
@@ -31,17 +30,11 @@ const Bank = () => {
         functionName: 'getUserBalance'
     })
 
-    const { data: msgSenderOnContract } = useReadContract({
-        address: CONTRACT_ADDRESS,
-        abi: CONTRACT_ABI,
-        functionName: 'getUserAddress'
-    })
-
-    const { data: usdcBalanceOfUser, refetch: refetchUserBalance } = useReadContract({
-      address: CONTRACT_ADDRESS,
-      abi: CONTRACT_ABI,
-      functionName: 'getUsdcBalanceOfUser'
-    })
+    // const { data: usdcBalanceOfUser, refetch: refetchUserBalance } = useReadContract({
+    //   address: CONTRACT_ADDRESS,
+    //   abi: CONTRACT_ABI,
+    //   functionName: 'getUsdcBalanceOfUser'
+    // })
 
     const { data: balanceContract, refetch: refetchBalanceContract } = useReadContract({
         address: CONTRACT_ADDRESS,
@@ -49,40 +42,54 @@ const Bank = () => {
         functionName: 'getUsdcBalance'
     })
 
+    const { data: d4ABalance, refetchD4ABalance } = useReadContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'balanceOf',
+      args: [address],
+    })
+
+    const { data: usdcBalanceOfUser, refetchUserBalance } = useReadContract({
+      address: USDC_ADDRESS,
+      abi: USDC_ADDRESS_ABI,
+      functionName: 'balanceOf',  
+      args: [address],
+    })
+
     const getEvents = async() => {
 
         const depositEvents = await publicClient.getLogs({
             address: CONTRACT_ADDRESS,
-            event: parseAbiItem('event Deposited(address indexed account, uint amount)'),
+            event: parseAbiItem('event Deposited(address indexed account, uint amount, uint timestamp)'),
             // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
-            fromBlock: 21423360n,
+            fromBlock: 22176642n,
             // jusqu'au dernier
             toBlock: 'latest' // Pas besoin valeur par défaut
         })
 
         const withdrawEvents = await publicClient.getLogs({
             address: CONTRACT_ADDRESS,
-            event: parseAbiItem('event Withdrawn(address indexed account, uint amount)'),
+            event: parseAbiItem('event Withdrawn(address indexed account, uint amount, uint timestamp)'),
             // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
-            fromBlock: 21423360n,
+            fromBlock: 22176642n,
             // jusqu'au dernier
             toBlock: 'latest' // Pas besoin valeur par défaut
         })
 
         const supplyAaveEvents = await publicClient.getLogs({
           address: CONTRACT_ADDRESS,
-          event: parseAbiItem('event SuppliedToAave(address indexed account, uint amount)'),
+          event: parseAbiItem('event SuppliedToAave(address indexed account, uint amount, uint timestamp)'),
           // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
-          fromBlock: 21423360n,
+          fromBlock: 22176642n,
           // jusqu'au dernier
           toBlock: 'latest' // Pas besoin valeur par défaut
         })
 
       const withdrawAaveEvents = await publicClient.getLogs({
           address: CONTRACT_ADDRESS,
-          event: parseAbiItem('event WithdrawnFromAave(address indexed account, uint amount)'),
+          event: parseAbiItem('event WithdrawnFromAave(address indexed account, uint amount, uint timestamp)'),
           // du premier bloc choisi dans la config hardhat pour faire le fork du mainnet
-          fromBlock: 21423360n,
+          fromBlock: 22176642n,
           // jusqu'au dernier
           toBlock: 'latest' // Pas besoin valeur par défaut
         })
@@ -92,12 +99,14 @@ const Bank = () => {
           type: 'Deposited',
           address: event.args.account,
           amount: event.args.amount,
-          blockTimestamp: Number(event.blockTimestamp)
+          blockTimestamp: Number(event.args.timestamp), // On récupère le timestamp de la trx via les evenements
+          // blockTimestamp: Number(event.blockNumber)
       })).concat(withdrawEvents.map((event) => ({
           type: 'Withdrawn',
           address: event.args.account,
           amount: event.args.amount,
-          blockTimestamp: Number(event.blockTimestamp)
+          blockTimestamp: Number(event.args.timestamp),
+          // blockTimestamp: Number(event.blockNumber)
       })))
 
       const combinedEventsAave = 
@@ -105,19 +114,21 @@ const Bank = () => {
           type: 'SuppliedToAave',
             address: event.args.account,
             amount: event.args.amount,
-            blockTimestamp: Number(event.blockTimestamp)
+            blockTimestamp: Number(event.args.timestamp),
+            // blockTimestamp: Number(event.blockNumber)
         })).concat(withdrawAaveEvents.map((event) => ({
           type: 'WithdrawnFromAave',
           address: event.args.account,
           amount: event.args.amount,
-          blockTimestamp: Number(event.blockTimestamp)
+          blockTimestamp: Number(event.args.timestamp),
+          // blockTimestamp: Number(event.blockNumber)
         })))  
 
       const sortedEventsUsdc = combinedEventInsurance.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp))
       const sortedEventsAave = combinedEventsAave.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp))
 
-      console.log(sortedEventsUsdc)
-      console.log(sortedEventsAave)
+      console.log("Sorted Events USDC", sortedEventsUsdc)
+      console.log("Sorted Events AAVE", sortedEventsAave)
 
       setEventsUsdc(sortedEventsUsdc)
       setEventsAave(sortedEventsAave)
@@ -133,25 +144,53 @@ const Bank = () => {
     getAllEvents();
   }, [address])
 
+  // Appelé à chaque Action
+  const handleDepositOrWithdraw = async () => {
+    if(address !== 'undefined') {
+      await getEvents();
+    }
+  };
+
   return (
-    <div className="flex flex-row items-stretch justify-center min-h-screen">
+    <>
+    <div className="flex flex-col items-stretch justify-center min-h-screen antialiased gradient bg-gradient-to-t from-emerald-700 to-black leading-relaxed tracking-wide">
+    <div className="flex justify-between items-center border-b p-5">
+      <div className="flex flex-col justify-between items-center">
+        <GetBalance userBalanceOnContract={userBalanceOnContract} balance={usdcBalanceOfUser} isPending={isPending} error={error} />
+        Your USDC balance
+      </div>
+      <div className="flex flex-col justify-between items-center">
+        <GetBalance userBalanceOnContract={userBalanceOnContract} balance={userBalanceOnContract} isPending={isPending} error={error} />
+        Your Insurance balance
+      </div>
+      <div className="flex flex-col justify-between items-center">
+        <GetBalance userBalanceOnContract={d4ABalance} balance={d4ABalance} isPending={isPending} error={error} />
+        Your D4A balance
+      </div>
+      <div className="flex flex-col justify-between items-center">
+        <GetBalance userBalanceOnContract={userBalanceOnContract} balance={balanceContract} isPending={isPending} error={error} />
+        Insurance balance
+      </div>
+    </div>
       {isConnected ? (
         <>
-          <div className="flex-1 text-center border-r border-gray-300 ">
+        <div className="flex flex-row justify-between items-center">
+          <div className="flex-1 text-center border-r border-gray-300 pt-10">
               <h1 className='text-2xl font-bold mb-2'>Insurance</h1>
               <div className="pl-10 pr-10">
-                <DepositUsdc refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={eventsUsdc} />
-                <WithdrawUsdc refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={eventsUsdc} />
+                <DepositUsdc onDeposit={handleDepositOrWithdraw} refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={eventsUsdc} />
+                <WithdrawUsdc onWithdraw={handleDepositOrWithdraw} refetchUserBalanceOnContract={refetchUserBalanceOnContract} refetchUserBalance={refetchUserBalance} refetchBalanceContract={refetchBalanceContract} events={eventsUsdc} />
               </div>
               <Events events={eventsUsdc} />
           </div>
-          <div className="flex-1 text-center border-r border-gray-300 ">
+          <div className="flex-1 text-center pt-10">
               <h1 className='text-2xl font-bold mb-2'>AAVE</h1>
               <div className="px-10">
                 <SupplyAave events={eventsAave} />
                 <WithdrawAave events={eventsAave} />
               </div>
               <Events events={eventsAave} />
+          </div>
           </div>
         </>
       ) : (
@@ -161,6 +200,7 @@ const Bank = () => {
         </Alert>
       )}
     </div>
+    </>
   )
 }
 

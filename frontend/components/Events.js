@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator"
 const Events = ({ events }) => {
   return (
     <div className='mt-20 px-5'>
-      <h2 className='text-xl font-bold mb-2'>Transaction history</h2>
+      <h2 className='text-2xl font-bold mb-2'>Transaction history</h2>
       <ScrollArea className="h-80 w-full rounded-md border border-gray-300">
         <div className="p-4">
           <h4 className="mb-4 text-sm font-medium leading-none">Events</h4>
@@ -26,7 +26,6 @@ const Events = ({ events }) => {
                   </Badge>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(event.blockTimestamp * 1000).toLocaleString()}
-                    {console.log(event)}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-1 truncate">

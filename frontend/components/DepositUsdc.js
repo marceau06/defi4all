@@ -8,7 +8,7 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@
 import { useState, useEffect } from 'react'
 import { parseUnits  } from "ethers";
 
-const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
+const DepositUsdc = ({ onDeposit, refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
     const [amount, setAmount] = useState()
 
@@ -80,6 +80,7 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
             refetchUserBalance()
             refetchBalanceContract()
             setAmount('')
+            onDeposit()
         }
     }, [isSuccessDeposit])
     

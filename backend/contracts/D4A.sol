@@ -23,10 +23,10 @@ contract D4A is ERC20, Ownable {
     IUniswapV2Router02 public uniswapV2Router02;
 
     // Events
-    event Deposited(address indexed user, uint256 amount);
-    event Withdrawn(address indexed user, uint256 amount);
-    event SuppliedToAave(address indexed user, uint256 amount);
-    event WithdrawnFromAave(address indexed user, uint256 amount);
+    event Deposited(address indexed user, uint256 amount, uint256 timestamp); // Use timestamp to have transaction history
+    event Withdrawn(address indexed user, uint256 amount, uint256 timestamp);
+    event SuppliedToAave(address indexed user, uint256 amount, uint256 timestamp);
+    event WithdrawnFromAave(address indexed user, uint256 amount, uint256 timestamp);
     event Minted(address indexed user, uint256 amount);
     event Burned(address indexed user, uint256 amount);
 
@@ -62,7 +62,7 @@ contract D4A is ERC20, Ownable {
         userDeposits[msg.sender] += _amount;
 
         // Emit an event to notify the deposit
-        emit Deposited(msg.sender, _amount);
+        emit Deposited(msg.sender, _amount, block.timestamp);
     }
 
     /// @notice Allows the user to withdraw USDC from contract
@@ -81,7 +81,7 @@ contract D4A is ERC20, Ownable {
         userDeposits[msg.sender] -= _amount;
         
         // Emit an event to notify the withdrawal
-        emit Withdrawn(msg.sender, _amount);
+        emit Withdrawn(msg.sender, _amount, block.timestamp);
     }
 
     /// @notice Allows the user to let the contract supply USDC into the aave pool
@@ -92,6 +92,9 @@ contract D4A is ERC20, Ownable {
         require(_amount > 0, "Amount must be greater than 0");
         // Check that the user has enough USDC
         require(usdcToken.balanceOf(msg.sender) >= _amount, "Insufficient funds");
+        // Check if after applying the discount, the remaining amount is still valid
+        uint256 reducedAmount = _amount - ((_amount * 5) / 1000);
+        require(reducedAmount > 0, "Amount to supply is too low");
         // Check that the user has authorized the contract to transfer the tokens
         uint256 allowance = usdcToken.allowance(msg.sender, address(this));
         require(allowance >= _amount, "Allowance too low");
@@ -103,10 +106,10 @@ contract D4A is ERC20, Ownable {
         usdcToken.approve(address(aavePool), _amount);
 
         // Supplies _amount of usdc into the Aave V3 aavePool contract
-        aavePool.supply(address(usdcToken), _amount, msg.sender, 0);
+        aavePool.supply(address(usdcToken), reducedAmount, msg.sender, 0);
 
         // Emit an event to notify the supply
-        emit SuppliedToAave(msg.sender, _amount);
+        emit SuppliedToAave(msg.sender, _amount, block.timestamp);
     }
 
     /// @notice Allows the user to let the contract withdraw USDC from the aave pool
@@ -128,7 +131,7 @@ contract D4A is ERC20, Ownable {
         aavePool.withdraw(address(usdcToken), _amount, msg.sender);
 
         // Emit an event to notify the withdrawal
-        emit WithdrawnFromAave(msg.sender, _amount);
+        emit WithdrawnFromAave(msg.sender, _amount, block.timestamp);
     }
 
     ///@notice Allows the owner to burn D4A token

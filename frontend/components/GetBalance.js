@@ -1,11 +1,13 @@
 import { formatUnits  } from "ethers";
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 
-const GetBalance = ({ balance, isPending, error,  }) => {
+
+const GetBalance = ({ balance, isPending, error, balanceTitle  }) => {
   return (
-    <div>
+    <div className="mt-6 flex items-baseline gap-2">
         {isPending && <div>Loading...</div>}
         {error && <div>Error: {error.shortMessage || error.message}</div>}
-        {balance !== undefined && <div>Balance: {formatUnits(balance.toString(), 6).toString()} USDC</div>}
+        {balance !== undefined && <div><span className="text-4xl font-bold">{formatUnits(balance.toString(), 6).toString()}</span>  <span className="text-sm text-muted-foreground">USDC</span></div>}
     </div>
   )
 }
