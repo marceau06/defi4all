@@ -42,14 +42,14 @@ const Bank = () => {
         functionName: 'getUsdcBalance'
     })
 
-    const { data: d4ABalance, refetchD4ABalance } = useReadContract({
+    const { data: d4ABalance, refetch: refetchD4ABalance } = useReadContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: 'balanceOf',
       args: [address],
     })
 
-    const { data: usdcBalanceOfUser, refetchUserBalance } = useReadContract({
+    const { data: usdcBalanceOfUser, refetch: refetchUserBalance } = useReadContract({
       address: USDC_ADDRESS,
       abi: USDC_ADDRESS_ABI,
       functionName: 'balanceOf',  

@@ -13,8 +13,18 @@ import { IAToken } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IATok
 
 contract D4A is ERC20, Ownable {
 
+    uint256 private constant SECONDS_IN_YEAR = 365 days;
+
+    uint256 private constant MINIMUM_SUPPLY = 1000000; // 10 USDC
+
+    struct Account {
+        uint balance;
+        uint lastDeposit;
+        uint mintableTokens;
+    }
+
     // Mapping to save users deposits 
-    mapping(address => uint256) public userDeposits;
+    mapping(address => Account) public userDeposits;
 
     // Interfaces deployed contracts
     IPool public aavePool;
@@ -55,11 +65,14 @@ contract D4A is ERC20, Ownable {
         // Transfer USDC to this contract
         usdcToken.transferFrom(msg.sender, address(this), _amount);
 
-        // Mint 15% of D4AS
-        _mint(msg.sender, _amount * 15 / 100);
+        // Set the last deposit time
+        userDeposits[msg.sender].lastDeposit = block.timestamp;
+
+        // Update rewards
+        userDeposits[msg.sender].mintableTokens += calculateRewards();
 
         // Update user deposit balance
-        userDeposits[msg.sender] += _amount;
+        userDeposits[msg.sender].balance += _amount;
 
         // Emit an event to notify the deposit
         emit Deposited(msg.sender, _amount, block.timestamp);
@@ -72,13 +85,19 @@ contract D4A is ERC20, Ownable {
         // Check that the amount is greater than 0
         require(_amount > 0, "Amount must be greater than 0");
         // Check that the user has enough USDC on the contract
-        require(userDeposits[msg.sender] >= _amount, "Insufficient funds");
+        require(userDeposits[msg.sender].balance >= _amount, "Insufficient funds");
 
         // Transfer USDC to the user
         usdcToken.transfer(msg.sender, _amount);
 
+        // Update the last withdraw time
+        userDeposits[msg.sender].lastDeposit = block.timestamp;
+
+        // Update mintable tokens amount
+        userDeposits[msg.sender].mintableTokens += calculateRewards();
+
         // Update user deposit balance
-        userDeposits[msg.sender] -= _amount;
+        userDeposits[msg.sender].balance -= _amount;
         
         // Emit an event to notify the withdrawal
         emit Withdrawn(msg.sender, _amount, block.timestamp);
@@ -89,16 +108,16 @@ contract D4A is ERC20, Ownable {
     /// @param _amount The amount in wei to supply
     function supplyToAave(uint256 _amount) external {
         // Check that the amount is greater than 0
-        require(_amount > 0, "Amount must be greater than 0");
+        require(_amount >= MINIMUM_SUPPLY, "Supply too small (min 0.01 USDC)");
         // Check that the user has enough USDC
         require(usdcToken.balanceOf(msg.sender) >= _amount, "Insufficient funds");
-        // Check if after applying the discount, the remaining amount is still valid
-        uint256 reducedAmount = _amount - ((_amount * 5) / 1000);
-        require(reducedAmount > 0, "Amount to supply is too low");
         // Check that the user has authorized the contract to transfer the tokens
         uint256 allowance = usdcToken.allowance(msg.sender, address(this));
         require(allowance >= _amount, "Allowance too low");
 
+        // Calculate the reduced amount
+        uint256 reducedAmount = (_amount * 5) / 1000;
+        
         // Deposit usdc to repay the contract
         usdcToken.transferFrom(msg.sender, address(this), _amount);
 
@@ -106,7 +125,7 @@ contract D4A is ERC20, Ownable {
         usdcToken.approve(address(aavePool), _amount);
 
         // Supplies _amount of usdc into the Aave V3 aavePool contract
-        aavePool.supply(address(usdcToken), reducedAmount, msg.sender, 0);
+        aavePool.supply(address(usdcToken), _amount - reducedAmount, msg.sender, 0);
 
         // Emit an event to notify the supply
         emit SuppliedToAave(msg.sender, _amount, block.timestamp);
@@ -134,6 +153,40 @@ contract D4A is ERC20, Ownable {
         emit WithdrawnFromAave(msg.sender, _amount, block.timestamp);
     }
 
+
+    // Calculer les récompenses basées sur le dépôt et le temps écoulé
+    function calculateRewards() public view returns (uint256) {
+        Account memory userAccount = userDeposits[msg.sender];
+        if (userAccount.lastDeposit == 0 || block.timestamp <= userAccount.lastDeposit + 60 || userAccount.balance < MINIMUM_SUPPLY) {
+            return 0;
+        }
+        uint256 timeElapsed = block.timestamp - userAccount.lastDeposit;
+        return (userAccount.balance * timeElapsed * 15) / (SECONDS_IN_YEAR * 100);
+    }
+
+    // Function to mint tokens
+    function mintTokens() public {
+        Account storage userAccount = userDeposits[msg.sender];
+        // Calculate rewards
+        uint256 rewards = calculateRewards();
+        // Ensure there are tokens to mint
+        require(rewards > 0, "No mintable tokens available");
+
+        // Add rewards to mintable tokens
+        uint256 mintable = rewards + userAccount.mintableTokens;
+
+        // Update the last deposit time to avoid unnecessary recalculations
+        userAccount.lastDeposit = block.timestamp;
+
+        // Reset mintable tokens before minting to save gas
+        userAccount.mintableTokens = 0;
+
+        // Mint tokens
+        _mint(msg.sender, mintable);
+
+        emit Minted(msg.sender, mintable);
+    }
+
     ///@notice Allows the owner to burn D4A token
     function burn(uint256 _amount) external onlyOwner {
         _burn(msg.sender, _amount);
@@ -149,20 +202,18 @@ contract D4A is ERC20, Ownable {
     ///@notice Allows to get the amount of usdc the user has deposit on the smart contract 
     ///@return The amount of usdc the user has deposit on the smart contract
     function getUserBalance() external view returns(uint256) {
-        return userDeposits[msg.sender];
+        return userDeposits[msg.sender].balance;
+    }
+
+    ///@notice Allows to get the amount of usdc the user has deposit on the smart contract 
+    ///@return The amount of usdc the user has deposit on the smart contract
+    function getMintableTokens() external view returns(uint256) {
+        return userDeposits[msg.sender].mintableTokens;
     }
 
     // Overload the decimals function to set 6 decimals
     function decimals() public pure override returns (uint8) {
         return 6;
-    }
-
-    function getUserAddress() external view returns(address) {
-        return msg.sender;
-    }
-
-    function getUsdcBalanceOfUser() external view returns(uint256) {
-        return usdcToken.balanceOf(msg.sender);
     }
     
 }
