@@ -27,7 +27,7 @@ const D4A = () => {
     const { data: blockNumber } = useBlockNumber({ watch: true })
 
 
-    const { data: userBalanceOnContract, isPending: userBalanceOnContractPending, error: userBalanceOnContractError, refetch: refetchUserBalanceOnContract } = useReadContract({
+    const { data: userBalanceOnContract, refetch: refetchUserBalanceOnContract, isPending: userBalanceOnContractPending, error: userBalanceOnContractError } = useReadContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: 'getUserBalance'

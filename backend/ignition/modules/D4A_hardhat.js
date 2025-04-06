@@ -14,13 +14,13 @@ require('dotenv').config();
 // Sepolia 
 const poolAddress = process.env.AAVE_POOL_ADDRESS_SEPOLIA; 
 const usdcTokenAddress = process.env.USDC_ADDRESS_SEPOLIA;
-const hardhatOwnerAddress = process.env.SEPOLIA_OWNER_ADDRESS;
+const ownerAddress = process.env.SEPOLIA_OWNER_ADDRESS;
 const ausdcTokenAddress = process.env.AUSDC_ADDRESS_SEPOLIA;
 const uniswapV2Router02Address = process.env.UNISWAP_ROUTER_ADDRESS_SEPOLIA;
 
 module.exports = buildModule("D4AModule", (m) => {
 
-    const d4A = m.contract("D4A", [hardhatOwnerAddress, poolAddress, usdcTokenAddress, ausdcTokenAddress, uniswapV2Router02Address]);
+    const d4A = m.contract("D4A", [ownerAddress, poolAddress, usdcTokenAddress, ausdcTokenAddress, uniswapV2Router02Address]);
 
     return { d4A }
 });
