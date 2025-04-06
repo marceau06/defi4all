@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main  # Déclenche le workflow sur les push vers la branche principale
+      - smart-contract-development  # Déclenche le workflow sur les push vers la branche de développement du frontend
   pull_request:
     branches:
       - main  # Déclenche le workflow lors des PR vers la branche principale
