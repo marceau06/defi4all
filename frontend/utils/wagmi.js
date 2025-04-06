@@ -1,4 +1,6 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { http } from 'viem'
+
 import {
   hardhat,
   sepolia
