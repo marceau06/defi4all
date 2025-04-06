@@ -14,7 +14,7 @@ export const config = getDefaultConfig({
     sepolia
   ],
   transports: {
-    [sepolia.id]: http(process.env.RPC_URL_SEPOLIA),
+    [sepolia.id]: http("https://eth-sepolia.g.alchemy.com/v2/rPdEQ-9jD9nKjwpj-SbkBnjcO6aIZojR"),
   },
   ssr: true,
 });
