@@ -1,13 +1,18 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import {
-  hardhat
+  hardhat,
+  sepolia
 } from 'wagmi/chains';
 
 export const config = getDefaultConfig({
   appName: 'D4A DApp',
-  projectId: 'YOUR_PROJECT_ID',
+  projectId: 'D4A',
   chains: [
-    hardhat
+    // hardhat,
+    sepolia
   ],
+  transports: {
+    [sepolia.id]: http(process.env.RPC_URL_SEPOLIA),
+  },
   ssr: true,
 });
