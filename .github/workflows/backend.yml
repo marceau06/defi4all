@@ -3,7 +3,7 @@ name: Run Hardhat Tests
 on:
   push:
     branches:
-      - sepolia_deployment
+      - main
   pull_request:
     branches:
       - main
