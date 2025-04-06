@@ -1,14 +1,13 @@
 'use client';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Label } from './ui/label'
 import { toast } from "sonner"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, AAVE_USDC_ADDRESS, AAVE_USDC_ADDRESS_ABI } from '@/constants'
 import { useState, useEffect } from 'react'
 import { parseUnits  } from "ethers"
 
-const WithdrawAave = ({}) => {
+const WithdrawAave = ({ onWithdrawAave }) => {
 
     const [amount, setAmount] = useState()
 
@@ -72,9 +71,10 @@ const WithdrawAave = ({}) => {
     useEffect(() => {
         if (isSuccessWithdrawFromAave) {
             console.log("hash of deposit: ", withdrawFromAaveData)
-            toast("WITHDRAW FROM AAVE: Transaction successful", {
+            toast("WITHDRAWAL STRATEGY: Transaction successful", {
                 description: "Hash: " + withdrawFromAaveData,
             })
+            onWithdrawAave()
             setAmount('')
         }
     }, [isSuccessWithdrawFromAave])
@@ -89,7 +89,7 @@ const WithdrawAave = ({}) => {
 
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-8'>Withdraw from AAVE V3 Pool</h2>
+            <h2 className='text-2xl font-bold mb-8'>Withdraw from STRATEGY</h2>
             {isLoadingWithdrawFromAave && <div>Waiting for confirmation...</div>}
         <Input 
             type='number' 
@@ -101,7 +101,7 @@ const WithdrawAave = ({}) => {
         <Button             
             className="w-3xl mt-4 border border-transparent shadow-sm font-medium rounded-md text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-offset-4 focus:ring-emerald-500"
             onClick={handleApprove} 
-            disabled={isLoadingWithdrawFromAave}>{isLoadingWithdrawFromAave ? 'Withdrawing USDC...' : 'Withdraw USDC from Aave pool'}
+            disabled={isLoadingWithdrawFromAave}>{isLoadingWithdrawFromAave ? 'Withdrawing USDC...' : 'Withdraw USDC from the strategy'}
         </Button>
         </div>
     )

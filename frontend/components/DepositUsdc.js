@@ -1,14 +1,13 @@
 'use client';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { toast } from "sonner"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@/constants'
 import { useState, useEffect } from 'react'
 import { parseUnits  } from "ethers";
 
-const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
+const DepositUsdc = ({ onDeposit, refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
     const [amount, setAmount] = useState()
 
@@ -79,6 +78,7 @@ const DepositUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetch
             refetchUserBalanceOnContract()
             refetchUserBalance()
             refetchBalanceContract()
+            onDeposit()
             setAmount('')
         }
     }, [isSuccessDeposit])

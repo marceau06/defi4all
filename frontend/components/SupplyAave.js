@@ -1,14 +1,13 @@
 'use client';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Label } from './ui/label'
 import { toast } from "sonner"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@/constants'
 import { useState, useEffect } from 'react'
 import { parseUnits  } from "ethers";
 
-const SupplyAave = ({}) => {
+const SupplyAave = ({ onSupplyAave }) => {
 
     const [amount, setAmount] = useState()
 
@@ -73,16 +72,17 @@ const SupplyAave = ({}) => {
     useEffect(() => {
         if (isSuccessDeposit) {
             console.log("hash of deposit: ", depositData)
-            toast("SUPPLY TO AAVE: Transaction successful", {
+            toast("SUPPLY TO STRATEGY: Transaction successful", {
                 description: "Hash: " + depositData,
             })
+            onSupplyAave()
             setAmount('')
         }
     }, [isSuccessDeposit])
 
     return (
         <div className='mt-10'>
-            <h2 className='text-2xl font-bold mb-8'>Supply to AAVE V3 Pool</h2>
+            <h2 className='text-2xl font-bold mb-8'>Supply to the STRATEGY</h2>
             {isLoadingDeposit && <div>Waiting for confirmation...</div>}
             {depositError && (
                 <div>Error: {depositError.shortMessage || depositError.message}</div>
@@ -97,7 +97,7 @@ const SupplyAave = ({}) => {
             <Button             
                 className="w-3xl mt-4 border border-transparent shadow-sm font-medium rounded-md text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-offset-4 focus:ring-emerald-500"
                 onClick={handleApprove} 
-                disabled={isLoadingDeposit}>{isLoadingDeposit ? 'Depositing USDC...' : 'Supply USDC to Aave pool'}
+                disabled={isLoadingDeposit}>{isLoadingDeposit ? 'Depositing USDC...' : 'Supply USDC to strategy'}
             </Button>
         </div>
     )

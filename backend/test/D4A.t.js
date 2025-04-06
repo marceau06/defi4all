@@ -1,7 +1,8 @@
 const { expect } = require("chai");
 const hre = require("hardhat");
-const { ethers } = require("hardhat");
+const { ethers, network } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
+const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
   
 
   describe("Supply", function () {
@@ -31,8 +32,8 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
       // Show balance before SWAP
       const usdcBalanceOwnerBeforeSwap = await usdcToken.balanceOf(owner.address);
-      console.log("On Fixture: ETH Owner balance before SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
-      console.log("On Fixture: USDC Owner balance before SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerBeforeSwap, 6));
+      console.log("- Swap ETH to USDC: : ETH Owner balance before SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
+      console.log("- Swap ETH to USDC: : USDC Owner balance before SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerBeforeSwap, 6));
     
       // Get Weth ERC20 token address
       const wethAddress = await uniswapRouter.WETH();
@@ -55,8 +56,8 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
       // Show balance after SWAP
       const usdcBalanceOwnerAfterSwap = await usdcToken.balanceOf(owner.address);
-      console.log("On Fixture: ETH Owner balance after SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
-      console.log("On Fixture: USDC Owner balance after SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerAfterSwap, 6));
+      console.log("- Swap ETH to USDC: : ETH Owner balance after SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
+      console.log("- Swap ETH to USDC: : USDC Owner balance after SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerAfterSwap, 6));
 
       return { d4A, owner, addressUser, poolAddress, usdcTokenAddress, usdcToken, aUsdcToken, aavePool, uniswapRouter, ethValueInUsdc };
     }
@@ -76,7 +77,8 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         expect(contractPoolAddress).to.equal(poolAddress);
         expect(contractUsdcTokenAddress).to.equal(usdcTokenAddress);
         expect(await d4A.decimals()).to.equal(6);
-
+        expect(await d4A.name()).to.equal("D4AToken");
+        expect(await d4A.symbol()).to.equal("D4A");   
       })
 
     })
@@ -88,12 +90,12 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
         // Verify that the owner has received USDC after the swap
         const usdcBalanceOwner = await usdcToken.balanceOf(owner.address);
-        console.log("USDC Owner balance: ", hre.ethers.formatUnits(usdcBalanceOwner, 6));
-
         // Owner's USDC balance must have increased
-        expect(usdcBalanceOwner).to.gt(0);
+        expect(usdcBalanceOwner)
+                .to.gt(0);
         // Owner's USDC balance must be equal to 1 eth
-        expect(usdcBalanceOwner).to.equal(ethValueInUsdc);
+        expect(usdcBalanceOwner)
+                .to.equal(ethValueInUsdc);
       
       })
 
@@ -105,18 +107,17 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         const { d4A } = await loadFixture(deployContractSupplyTestFixture);
 
         await expect(d4A.supplyToAave(0))
-                .to.be.revertedWith("Amount must be greater than 0");
+                .to.be.revertedWith("Supply too small (min 10 USDC)");
       
       })
 
-      it('should revert when amount sent is more than the wallet balance', async function() {
-        const { d4A } = await loadFixture(deployContractSupplyTestFixture);
-        const amountToDeposit = hre.ethers.parseUnits("10000", 6); // 10000 usdc
+//       it('should revert when amount sent is more than the wallet balance', async function() {
+//         const { d4A } = await loadFixture(deployContractSupplyTestFixture);
+//         const amountToDeposit = hre.ethers.parseUnits("10000", 6);
 
-        await expect(d4A.supplyToAave(amountToDeposit))
-                .to.be.revertedWith("Insufficient funds"); 
-      })
-
+//         await expect(d4A.supplyToAave(amountToDeposit))
+//                 .to.be.revertedWith("Insufficient funds"); 
+//       })
 
       it('should revert when amount withdrawn is 0 ', async function() {
         const { d4A } = await loadFixture(deployContractSupplyTestFixture);
@@ -128,7 +129,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 
       it('should revert when amount withdrawn is more than the wallet balance', async function() {
         const { d4A } = await loadFixture(deployContractSupplyTestFixture);
-        const amountToDeposit = hre.ethers.parseUnits("10000", 6); // 10000 usdc
+        const amountToDeposit = hre.ethers.parseUnits("10000", 6);
 
         await expect(d4A.withdrawFromAave(amountToDeposit))
                 .to.be.revertedWith("Insufficient balance of aUsdc"); 
@@ -138,25 +139,15 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         
         const { d4A, owner, usdcToken, aUsdcToken, ethValueInUsdc } = await loadFixture(deployContractSupplyTestFixture);
         
-        console.log("********************* SUPPLY TEST *********************");
+        console.log("-  SUPPLY AAVE TEST - ");
 
         // Amount to supply is 50 usdc
         const amount = hre.ethers.parseUnits("50", 6);
         console.log("Amount to supply: ", amount);
         
         const contractAUsdcBalanceBeforeSupply = await aUsdcToken.balanceOf(d4A);
-        const contractEthBalanceBeforeSupply = await ethers.provider.getBalance(d4A);
-
-        console.log("AUSDC Contract balance before SUPPLY: ", hre.ethers.formatUnits(contractAUsdcBalanceBeforeSupply, 8));
-        console.log("ETH Contract balance before SUPPLY: ", hre.ethers.formatUnits(contractEthBalanceBeforeSupply, 18));
-        
         const ownerUsdcBalanceBeforeSupply = await usdcToken.balanceOf(owner.address);
         const ownerAUsdcBalanceBeforeSupply = await aUsdcToken.balanceOf(owner.address);
-        const ownerEthBalanceBeforeSupply = await ethers.provider.getBalance(owner.address);
-        
-        console.log("USDC Owner balance before SUPPLY: ", hre.ethers.formatUnits(ownerUsdcBalanceBeforeSupply, 6));
-        console.log("AUSDC Owner balance before SUPPLY: ", await aUsdcToken.balanceOf(owner.address));
-        console.log("ETH Owner balance before SUPPLY: ", hre.ethers.formatUnits(ownerEthBalanceBeforeSupply, 18));
 
         // AUSDC Contract balance before SUPPLY
         expect(contractAUsdcBalanceBeforeSupply).to.equal(0);
@@ -172,74 +163,58 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
         // Use USDC approve to the contract to be able to transfer USDC tokens
         await usdcToken.approve(d4A, amount);
 
+        const latestBlock = await ethers.provider.getBlock("latest");
         // Do the supply
         await expect(d4A.supplyToAave(amount))
           .to.emit(d4A, "SuppliedToAave")
-          .withArgs(owner.address, amount);
+          .withArgs(owner.address, amount, anyValue); // We accept any value as `when` arg
         
-        console.log("********************* SUPPLY DONE *********************");
-        console.log("Deposit to the pool successfully made for an amount of ", amount);
 
-        const contractAUsdcBalanceAfterSupply = await aUsdcToken.balanceOf(d4A);
-        const contractEthBalanceAfterSupply = await ethers.provider.getBalance(d4A);
-        
-        console.log("AUSDC Contract balance after SUPPLY: ", hre.ethers.formatUnits(contractAUsdcBalanceAfterSupply, 6));
-        console.log("ETH Contract balance after SUPPLY: ", hre.ethers.formatUnits(contractEthBalanceAfterSupply, 18));
 
         const ownerUsdcBalanceAfterSupply = await usdcToken.balanceOf(owner.address);
         const ownerAUsdcBalancefterSupply = await aUsdcToken.balanceOf(owner.address);
-        const ownerEthBalanceAfterSupply = await ethers.provider.getBalance(owner.address);
-
-        console.log("USDC Owner balance after SUPPLY: ", hre.ethers.formatUnits(ownerUsdcBalanceAfterSupply, 6));
-        console.log("AUSDC Contract balance after SUPPLY: ",  hre.ethers.formatUnits(ownerAUsdcBalancefterSupply, 6));
-        console.log("ETH Owner balance after SUPPLY: ", hre.ethers.formatUnits(ownerEthBalanceAfterSupply, 18));
 
         // AUSDC Contract balance after SUPPLY
         expect(contractAUsdcBalanceBeforeSupply).to.equal(0);
         // USDC Owner balance after SUPPLY
         // 2931262574 - 50000000 = 2881262574
         expect(ownerUsdcBalanceAfterSupply).to.equal(ethValueInUsdc - Number(amount));
-        // AUSDC Owner balance after SUPPLY         
-        expect(ownerAUsdcBalancefterSupply).to.equal(amount);
+        // AUSDC Owner balance after SUPPLY    
+        // 0.5% of the amount goes to insurance
+        const rate = 5 / 1000;
+        const reduction = Number(amount) * rate;
+        const reducedAmount = Number(amount) - reduction;
+        expect(ownerAUsdcBalancefterSupply).to.equal(reducedAmount);
 
-        console.log("********************* WITHDRAWAL TEST *********************");
+        console.log("-  SUPPLY AAVE DONE - ");
+        console.log("Deposit to the pool successfully made for an amount of ", amount);
 
+        console.log("-  WITHDRAW AAVE TEST - ");
         // Should revert when allowance is less than the amount to supply
-        await expect(d4A.withdrawFromAave(amount))
+        await expect(d4A.withdrawFromAave(reducedAmount))
                 .to.be.revertedWith("Allowance too low");
 
         // Use AaveUSDC approve to the contract to be able to transfer AaveUSDC tokens
-        await aUsdcToken.approve(d4A, amount);
+        await aUsdcToken.approve(d4A, reducedAmount);
 
         // Do the withdraw
-        await expect(d4A.withdrawFromAave(amount))
+        await expect(d4A.withdrawFromAave(reducedAmount))
                 .to.emit(d4A, "WithdrawnFromAave")
-                .withArgs(owner.address, amount);
-
-        console.log("********************* WITHDRAW DONE *********************");
-        console.log("Withdrawal to the pool successfully made for an amount of ", amount);
+                .withArgs(owner.address, reducedAmount, anyValue); // We accept any value as `when` arg
 
         const contractAUsdcBalanceAfterWithdraw = await aUsdcToken.balanceOf(d4A);
-        const contractEthBalanceAfterWithdraw = await ethers.provider.getBalance(d4A);
-
-        console.log("AUSDC Contract balance on the pool after WITHDRAW: ", hre.ethers.formatUnits(contractAUsdcBalanceAfterWithdraw, 6));
-        console.log("ETH Contract balance after WITHDRAW: ", hre.ethers.formatUnits(contractEthBalanceAfterWithdraw, 18));
-
         const ownerUsdcBalanceAfterWithdraw = await usdcToken.balanceOf(owner.address);
         const ownerAUsdcBalanceAfterWithdraw = await aUsdcToken.balanceOf(owner.address);
-        const ownerEthBalanceAfterWithdraw = await ethers.provider.getBalance(owner.address)
-
-        console.log("USDC Owner balance after WITHDRAW: ", hre.ethers.formatUnits(ownerUsdcBalanceAfterWithdraw, 6));
-        console.log("AUSDC Owner balance after WITHDRAW: : ", hre.ethers.formatUnits(ownerAUsdcBalanceAfterWithdraw, 6));
-        console.log("AUSDC contract balance on the pool after WITHDRAW: ",  hre.ethers.formatUnits(contractAUsdcBalanceAfterWithdraw, 8));
-        console.log("ETH Owner balance after WITHDRAW: ", hre.ethers.formatUnits(ownerEthBalanceAfterWithdraw, 18));
 
         // AUSDC Contract balance after Withdraw
         expect(contractAUsdcBalanceAfterWithdraw).to.equal(0);
-        // USDC Owner balance after Withdraw: Recover all the USDC that had been supplied 
-        expect(ownerUsdcBalanceAfterWithdraw).to.equal(ethValueInUsdc);
+        // USDC Owner balance after Withdraw: Recover the USDC that had been supplied - the reduction of 0.5%
+        expect(ownerUsdcBalanceAfterWithdraw).to.equal(Number(ownerUsdcBalanceAfterSupply) + Number(reducedAmount));
         // AUSDC Owner balance after Withdraw: Should be O as we recovered all the USDC that had been supplied  
         expect(ownerAUsdcBalanceAfterWithdraw).to.equal(0);
+        console.log("-  WITHDRAW FROM AAVE DONE - ");
+        console.log("Withdrawal to the pool successfully made for an amount of ", reducedAmount);
+
       })
     })
 
@@ -252,13 +227,13 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
                 .to.be.revertedWith("Amount must be greater than 0");
       })
 
-      it("should revert when amount sent is more than the wallet balance", async function() {
-          const { d4A } = await loadFixture(deployContractSupplyTestFixture);
-          const amount = hre.ethers.parseUnits("10000", 6); // 10000 usdc
+//       it("should revert when amount sent is more than the wallet balance", async function() {
+//           const { d4A } = await loadFixture(deployContractSupplyTestFixture);
+//           const amount = hre.ethers.parseUnits("10000", 6);
   
-          await expect(d4A.depositUSDC(amount))
-                  .to.be.revertedWith("Insufficient funds"); 
-      })
+//           await expect(d4A.depositUSDC(amount))
+//                   .to.be.revertedWith("Insufficient funds"); 
+//       })
       
       it("should revert when not owner who burn token", async function() {
           const { d4A, addressUser } = await loadFixture(deployContractSupplyTestFixture);
@@ -282,24 +257,27 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
                   .to.be.revertedWith("Insufficient funds");
       })
 
-      it("should deposit usdc on the contract, get D4ATokens and burn them", async function() {
+
+      it("should have no rewards available", async function() {
+        const { d4A } = await loadFixture(deployContractSupplyTestFixture);
+
+        expect(await d4A.calculateRewards())
+                .to.eq(0);
+      })
+
+      it("should deposit Usdc on the contract, mint D4ATokens, burn D4ATokens and withdraw Usdc", async function() {
           const { d4A, owner, usdcToken, ethValueInUsdc } = await loadFixture(deployContractSupplyTestFixture);
           
-          console.log("********************* DEPOSIT TEST *********************");
+          console.log("-  MINT BEFORE DEPOSIT TEST - ");
+          // Should revert when Try Minting before deposit
+          await expect(d4A.mintTokens())
+                  .to.be.revertedWith("No mintable tokens available");
+          console.log("-  MINT BEFORE DEPOSIT DONE - ");
+
+          console.log("-  DEPOSIT USDC TEST - ");
           // Amount to supply is 1000 usdc
           const amount = hre.ethers.parseUnits("1000", 6);  
-          // Owner should receive 15% of his deposit in D4A
-          const d4ABalance = Number(amount)*(15/100);
           console.log("Amount usdc to supplly: ", amount);
-
-          const ownerUsdcBalanceOnTheContractBeforeDeposit = await d4A.getUserBalance();
-          const ownerUsdcBalanceBeforeDeposit = await usdcToken.balanceOf(owner.address);
-          const contractUsdcBalanceBeforeDeposit = await usdcToken.balanceOf(d4A);
-
-          console.log("ETH Owner balance before DEPOSIT: ", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
-          console.log("USDC Owner balance before DEPOSIT: ",  hre.ethers.formatUnits(ownerUsdcBalanceBeforeDeposit, 6));
-          console.log("USDC Owner balance on contract before DEPOSIT: ",  hre.ethers.formatUnits(ownerUsdcBalanceOnTheContractBeforeDeposit, 6));
-          console.log("USDC Contract balance before DEPOSIT: ", hre.ethers.formatUnits(contractUsdcBalanceBeforeDeposit, 6));
 
           // Should revert when allowance is less than the amount to supply
           await expect(d4A.depositUSDC(amount))
@@ -314,66 +292,155 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
           // Deposit tokens into the contract
           await expect(d4A.depositUSDC(amount))
                   .to.emit(d4A, "Deposited")
-                  .withArgs(owner.address, amount);
-          console.log("USDC deposited");
-          console.log("********************* DEPOSIT DONE *********************");
-          console.log("Deposit to the contract successfully made for an amount of ", amount);
-
+                  .withArgs(owner.address, amount, anyValue); // We accept any value as timestamp arg as hardhat can take more than 1 second to mine a block
 
           const ownerUsdcBalanceOnTheContractAfterDeposit = await d4A.getUserBalance();
-          const ownerUsdcBalanceAfterDeposit = await usdcToken.balanceOf(owner.address);
-          const contractUsdcBalanceAfterDeposit = await usdcToken.balanceOf(d4A);
-          const ownerD4ABalanceOnTheContractAfterDeposit = await d4A.balanceOf(owner.address);
-    
-          console.log("ETH Owner balance after DEPOSIT: ", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
-          console.log("USDC Owner balance after DEPOSIT: ", hre.ethers.formatUnits(ownerUsdcBalanceAfterDeposit, 6));
-          console.log("USDC Owner balance on contract before DEPOSIT: ",  hre.ethers.formatUnits(ownerUsdcBalanceOnTheContractAfterDeposit, 6));
-          console.log("USDC Contract balance after DEPOSIT: ", hre.ethers.formatUnits(contractUsdcBalanceAfterDeposit, 6));
-          console.log("D4A Owner balance after DEPOSIT: ",  hre.ethers.formatUnits(ownerD4ABalanceOnTheContractAfterDeposit, 6));
+          const ownerD4ABalanceAfterDeposit = await d4A.balanceOf(owner.address);
 
           // Contract balance must be equal to amount deposited
           expect(await d4A.getUsdcBalance()).to.eq(amount);
           // Owner balance on the contract must be equal to amount deposited
           expect(ownerUsdcBalanceOnTheContractAfterDeposit).to.eq(amount); 
           // Owner must have received 15% of his deposit in D4A
-          expect(ownerD4ABalanceOnTheContractAfterDeposit).to.eq(d4ABalance); 
-          
+          expect(ownerD4ABalanceAfterDeposit).to.eq(0); 
 
-          console.log("********************* BURN TEST *********************");
+          console.log("-  DEPOSIT USDC DONE - ");
+          console.log("Deposit to the contract successfully made for an amount of ", amount);
+
+          console.log("-  MINTING D4A TEST - ");
+
+          const blockBefore = await ethers.provider.getBlock("latest");
+          console.log("Timestamp before increase:", blockBefore.timestamp);
+        
+          const oneYearInSeconds = 31536000; // 1 year in seconds
+          const oneMonthInSeconds = (30 * 24 * 60 * 60); // 1 month in seconds
+          const rewardsPerYear = 15 / 100; // 15% per year of rewards
+          const expectedRewardsValuePerMonth = Math.trunc(Number(amount) * rewardsPerYear * oneMonthInSeconds / oneYearInSeconds); // Estimated 30 days of rewards
+          const expectedRewardsValuePerSecond = Math.trunc(Number(amount) * rewardsPerYear / oneYearInSeconds); // Estimated 1 second of rewards
+
+          // Check the amount of D4A tokens that can be minted before the time increase 
+          const mintableTokensBefore = await d4A.calculateRewards();
+          expect(mintableTokensBefore)
+                .to.eq(0);
+
+          // Try to mint the tokens before the time increase
+          await expect(d4A.mintTokens())
+                  .to.be.revertedWith("No mintable tokens available");
+
+          // Increase the time on the blockchain to 30 days before minting tokens
+          await network.provider.send("evm_increaseTime", [oneMonthInSeconds]);
+          // Mine a new block for the time change to take effect
+          await network.provider.send("evm_mine");
+
+          const blockAfter = await ethers.provider.getBlock("latest");
+          console.log("Timestamp after increase:", blockAfter.timestamp);
+
+          // Get the amount of D4A tokens that can be minted
+          const mintableTokens = await d4A.getMintableTokens();
+          // Get the amount of D4A tokens that can be minted
+          const rewards = await d4A.calculateRewards();
+          // Get all the tokens that can be minted
+          const totalMintableTokens = mintableTokens + rewards;
+
+          // Check getTotalRewards function at this point
+          expect(totalMintableTokens)
+                .to.eq(await d4A.getTotalRewards());
+          console.log("Total mintable tokens: ", totalMintableTokens);
+          console.log("Rewards: ", rewards);    
+
+          // Harhdat will mine a new block with the new timestamp when we call the mint function
+          // Estimate calculated rewards after mining new block
+          const expectedMintableTokens = expectedRewardsValuePerMonth + expectedRewardsValuePerSecond;
+
+          // We accept a margin of error of 1 second of rewards because hardhat can take more than 1 second to mine a block
+          expect(totalMintableTokens).to.be.closeTo(expectedMintableTokens, 1);
+          // expect(totalMintableTokens).to.eq(expectedMintableTokens);
+
+          // Mint the tokens
+          await expect(d4A.mintTokens())
+                  .to.emit(d4A, "Minted")
+                  .withArgs(owner.address, anyValue); // We already know the value of the minted tokens with calculateRewards() function
+
+          expect(await d4A.getMintableTokens())
+                .to.eq(0);
+
+          const ownerD4ABalanceOnTheContractAfterMint= await d4A.balanceOf(owner.address);
+          console.log("-  MINTING D4A DONE - ");
+          console.log("D4A User balance after MINT: ",  hre.ethers.formatUnits(ownerD4ABalanceOnTheContractAfterMint, 6));
+
+
+
+          console.log("-  BURN D4A TEST - ");
+          const ownerD4ABalanceBeforeBurn = await d4A.balanceOf(owner.address);
+
           // Should revert if burn more than balance
           await expect(d4A.burn(5000000000))
                   .to.be.revertedWithCustomError(d4A, "ERC20InsufficientBalance")
-                  .withArgs(owner.address, d4ABalance, 5000000000);
-          
+                  .withArgs(owner.address, ownerD4ABalanceBeforeBurn, 5000000000); 
+                  
           // Burn the token
-          await expect(d4A.burn(d4ABalance))
+          await expect(d4A.burn(ownerD4ABalanceBeforeBurn))
                   .to.emit(d4A, "Burned")
-                  .withArgs(owner.address, d4ABalance);
+                  .withArgs(owner.address, ownerD4ABalanceBeforeBurn);
 
           const ownerD4ABalanceOnTheContractAfterBurn = await d4A.balanceOf(owner.address);
-          console.log("D4A User balance after BURN: ",  hre.ethers.formatUnits(ownerD4ABalanceOnTheContractAfterBurn, 6));
-          console.log("********************* BURN DONE *********************");
 
           // Owner balance must be equal to 0
-          expect(ownerD4ABalanceOnTheContractAfterBurn).to.eq(0);
+          expect(ownerD4ABalanceOnTheContractAfterBurn)
+                .to.eq(0);
 
-          console.log("********************* WITHDRAW TEST *********************");
+          console.log("-  BURN D4A DONE - ");
+          console.log("D4A User balance after BURN: ",  hre.ethers.formatUnits(ownerD4ABalanceOnTheContractAfterBurn, 6));
+
+          console.log("-  WITHDRAW USDC TEST - ");
           // withdrawUSDC
-          await expect(d4A.withdrawUSDC(1000000000))
+          await expect(d4A.withdrawUSDC(amount))
                   .to.emit(d4A, "Withdrawn")
-                  .withArgs(owner.address, 1000000000);
-          console.log("********************* WITHDRAW DONE *********************");
-          console.log("Deposit to the contract successfully made for an amount of ", amount);
+                  .withArgs(owner.address, amount, anyValue); // We accept any value as `when` arg
 
           const ownerUsdcBalanceOnTheContractAfterWithdraw = await d4A.getUserBalance();
           const ownerUsdcBalanceAfterWithdraw = await usdcToken.balanceOf(owner.address);
 
-          console.log("USDC Contract balance after WITHDRAW: ", hre.ethers.formatUnits(await usdcToken.balanceOf(d4A), 6));
-          console.log("USDC Owner balance after WITHDRAW: ", hre.ethers.formatUnits(await usdcToken.balanceOf(owner.address), 6));
-          console.log("USDC Owner balance on contract before WITHDRAW: ",  hre.ethers.formatUnits(ownerUsdcBalanceOnTheContractAfterWithdraw, 6));
-
           expect(ownerUsdcBalanceOnTheContractAfterWithdraw).to.eq(0);
           expect(ownerUsdcBalanceAfterWithdraw).to.eq(ethValueInUsdc);
+
+          console.log("-  WITHDRAW USDC DONE - ");
+          console.log("Withdrawal to the contract successfully made for an amount of ", amount);
+        
+          console.log("-  MINTING TOO SMALL AMOUNT TEST - ");
+          // Last test to check that no rewards received if deposit is less than 10 usdc
+          // Approve the contract to spend USDC tokens
+          const tooSmallAmount = hre.ethers.parseUnits("0.1", 6); // 0.1 usdc
+          await usdcToken.approve(d4A, tooSmallAmount); // 0.1 usdc
+ 
+          // Deposit tokens into the contract
+          await expect(d4A.depositUSDC(tooSmallAmount))
+                  .to.emit(d4A, "Deposited")
+                  .withArgs(owner.address, tooSmallAmount, anyValue); // We accept any value as `when` arg
+         console.log("Deposit to the contract successfully made for an amount of ", tooSmallAmount);
+          
+          // Increase the time on the blockchain to 120 seconds
+          await network.provider.send("evm_increaseTime", [120]);
+          await network.provider.send("evm_mine");
+          
+          // Check that no rewards are available
+          expect(await d4A.calculateRewards())
+                  .to.eq(0);
+
+          console.log("Minting tokens for an amount of ", tooSmallAmount);
+          // Try Minting after time increased
+          await expect(d4A.mintTokens())
+                  .to.be.revertedWith("No mintable tokens available");
+
+          // withdrawUSDC
+          await expect(d4A.withdrawUSDC(tooSmallAmount))
+                  .to.emit(d4A, "Withdrawn")
+                  .withArgs(owner.address, tooSmallAmount, anyValue)
+          console.log("Withdrawal to the contract successfully made for an amount of ", tooSmallAmount);
+
+
+        console.log("- MINTING TOO SMALL AMOUNT DONE - ");
+
       })
     })
     

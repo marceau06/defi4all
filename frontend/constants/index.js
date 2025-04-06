@@ -1,6 +1,6 @@
 // export const CONTRACT_ADDRESS = "0xb0fBf99C983cFC6A7010d40De9aE48D2e37d49A7"; // SEPOLIA
 export const CONTRACT_ADDRESS = "0x7722f5d7964a04672761cdfdC7c17B7Ac8f197b7"; // HARDHAT 
-export const CONTRACT_ABI =  [
+export const CONTRACT_ABI = [
   {
     "inputs": [
       {
@@ -198,6 +198,12 @@ export const CONTRACT_ABI =  [
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
       }
     ],
     "name": "Deposited",
@@ -255,6 +261,12 @@ export const CONTRACT_ABI =  [
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
       }
     ],
     "name": "SuppliedToAave",
@@ -299,6 +311,12 @@ export const CONTRACT_ABI =  [
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
       }
     ],
     "name": "Withdrawn",
@@ -317,6 +335,12 @@ export const CONTRACT_ABI =  [
         "indexed": false,
         "internalType": "uint256",
         "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
         "type": "uint256"
       }
     ],
@@ -431,6 +455,19 @@ export const CONTRACT_ABI =  [
   },
   {
     "inputs": [],
+    "name": "calculateRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "decimals",
     "outputs": [
       {
@@ -457,38 +494,38 @@ export const CONTRACT_ABI =  [
   },
   {
     "inputs": [],
+    "name": "getMintableTokens",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTotalRewards",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getUsdcBalance",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getUsdcBalanceOfUser",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getUserAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -505,6 +542,13 @@ export const CONTRACT_ABI =  [
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "mintTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -683,7 +727,17 @@ export const CONTRACT_ABI =  [
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastDeposit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mintableTokens",
         "type": "uint256"
       }
     ],
