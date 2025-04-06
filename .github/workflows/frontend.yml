@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main  # Déclenche le workflow sur les push vers la branche principale
-      - contract-improvements  # Déclenche le workflow sur les push vers la branche de développement du frontend
+      - sepolia_deployment  # Déclenche le workflow sur les push vers la branche de développement du frontend
   pull_request:
     branches:
       - main  # Déclenche le workflow lors des PR vers la branche principale
