@@ -1,8 +1,7 @@
 'use client';
 import { useAccount } from 'wagmi'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import { useReadContract } from 'wagmi';
-
+import { useReadContract, useBlockNumber } from 'wagmi';
 import { parseAbiItem } from 'viem'
 import { useState, useEffect } from 'react'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI } from '@/constants'
@@ -13,9 +12,10 @@ import DepositUsdc from '@/components/DepositUsdc'
 import WithdrawUsdc from '@/components/WithdrawUsdc'
 import SupplyAave from '@/components/SupplyAave'
 import WithdrawAave from '@/components/WithdrawAave'
-import { useTheme } from "next-themes"
+import Mint from '@/components/Mint'
 
-const Bank = () => {
+
+const D4A = () => {
 
 
     const { isConnected, address } = useAccount()
@@ -23,33 +23,37 @@ const Bank = () => {
     const [eventsUsdc, setEventsUsdc] = useState([])
     const [eventsAave, setEventsAave] = useState([])
 
+    // Get the current block number
+    const { data: blockNumber } = useBlockNumber({ watch: true })
 
-    const { data: userBalanceOnContract, isPending, error, refetch: refetchUserBalanceOnContract } = useReadContract({
+
+    const { data: userBalanceOnContract, isPending: userBalanceOnContractPending, error: userBalanceOnContractError, refetch: refetchUserBalanceOnContract } = useReadContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: 'getUserBalance'
     })
 
-    // const { data: usdcBalanceOfUser, refetch: refetchUserBalance } = useReadContract({
-    //   address: CONTRACT_ADDRESS,
-    //   abi: CONTRACT_ABI,
-    //   functionName: 'getUsdcBalanceOfUser'
-    // })
+    const { data: mintableTokens, refetch: refetchMintableTokens, isPending: mintableTokensPending, error: mintableTokensError } = useReadContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'getTotalRewards'
+    })
 
-    const { data: balanceContract, refetch: refetchBalanceContract } = useReadContract({
+
+    const { data: balanceContract, refetch: refetchBalanceContract, isPending: balanceContractPending, error: balanceContractError} = useReadContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: 'getUsdcBalance'
     })
 
-    const { data: d4ABalance, refetch: refetchD4ABalance } = useReadContract({
+    const { data: d4ABalance, refetch: refetchD4ABalance, isPending: d4ABalancePending, error: d4ABalanceError } = useReadContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: 'balanceOf',
       args: [address],
     })
 
-    const { data: usdcBalanceOfUser, refetch: refetchUserBalance } = useReadContract({
+    const { data: usdcBalanceOfUser, refetch: refetchUserBalance, isPending: usdcBalanceOfUserPending, error: usdcBalanceOfUserError } = useReadContract({
       address: USDC_ADDRESS,
       abi: USDC_ADDRESS_ABI,
       functionName: 'balanceOf',  
@@ -135,6 +139,14 @@ const Bank = () => {
 
   }
 
+  // Refetch à chaque nouveau bloc
+  useEffect(() => {
+    if (blockNumber) {
+      refetchMintableTokens();
+    }
+  }, [blockNumber, mintableTokens])
+
+
   useEffect(() => {
     const getAllEvents = async() => {
       if(address !== 'undefined') {
@@ -142,6 +154,7 @@ const Bank = () => {
       }
     }
     getAllEvents();
+    refetchMintableTokens();
   }, [address])
 
   // Appelé à chaque Action
@@ -154,26 +167,39 @@ const Bank = () => {
   return (
     <>
     <div className="flex flex-col items-stretch justify-center min-h-screen antialiased gradient bg-gradient-to-t from-emerald-700 to-black leading-relaxed tracking-wide">
-    <div className="flex justify-between items-center border-b p-5">
-      <div className="flex flex-col justify-between items-center">
-        <GetBalance userBalanceOnContract={userBalanceOnContract} balance={usdcBalanceOfUser} isPending={isPending} error={error} />
-        Your USDC balance
-      </div>
-      <div className="flex flex-col justify-between items-center">
-        <GetBalance userBalanceOnContract={userBalanceOnContract} balance={userBalanceOnContract} isPending={isPending} error={error} />
-        Your Insurance balance
-      </div>
-      <div className="flex flex-col justify-between items-center">
-        <GetBalance userBalanceOnContract={d4ABalance} balance={d4ABalance} isPending={isPending} error={error} />
-        Your D4A balance
-      </div>
-      <div className="flex flex-col justify-between items-center">
-        <GetBalance userBalanceOnContract={userBalanceOnContract} balance={balanceContract} isPending={isPending} error={error} />
-        Insurance balance
-      </div>
-    </div>
+
+
       {isConnected ? (
         <>
+
+      <div className="flex justify-between items-center border-b p-5">
+          <div className="flex flex-col justify-between items-center">
+            <GetBalance balance={usdcBalanceOfUser} isPending={usdcBalanceOfUserPending} error={usdcBalanceOfUserError} />
+            Your USDC balance
+          </div>
+          <div className="flex flex-col justify-between items-center">
+            <GetBalance balance={userBalanceOnContract} isPending={userBalanceOnContractPending} error={userBalanceOnContractError} />
+            Your Insurance balance
+          </div>
+          <div className="flex flex-col justify-between items-center">
+            <GetBalance balance={d4ABalance} isPending={d4ABalancePending} error={d4ABalanceError} />
+            Your D4A balance
+          </div>
+          <div className="flex flex-col justify-between items-center">
+            <GetBalance balance={balanceContract} isPending={balanceContractPending} error={balanceContractError} />
+            Insurance balance
+          </div>
+      </div>
+        <div className="flex flex-row items-center border-b pb-5">
+          <div className="pl-5 flex flex-col items-center">
+
+          <GetBalance balance={mintableTokens} isPending={mintableTokensPending} error={mintableTokensError} />
+          Your Rewards available
+          </div>
+          <div className="pl-5">
+            <Mint mintableTokens={mintableTokens} refetchMintableTokens={refetchMintableTokens} refetchD4ABalance={refetchD4ABalance}/>
+          </div>
+      </div>
         <div className="flex flex-row justify-between items-center">
           <div className="flex-1 text-center border-r border-gray-300 pt-10">
               <h1 className='text-2xl font-bold mb-2'>Insurance</h1>
@@ -184,24 +210,26 @@ const Bank = () => {
               <Events events={eventsUsdc} />
           </div>
           <div className="flex-1 text-center pt-10">
-              <h1 className='text-2xl font-bold mb-2'>AAVE</h1>
+              <h1 className='text-2xl font-bold mb-2'>STRATEGIES</h1>
               <div className="px-10">
-                <SupplyAave events={eventsAave} />
-                <WithdrawAave events={eventsAave} />
+                <SupplyAave onSupplyAave={handleDepositOrWithdraw} events={eventsAave} />
+                <WithdrawAave onWithdrawAave={handleDepositOrWithdraw} events={eventsAave} />
               </div>
               <Events events={eventsAave} />
-          </div>
+            </div>
           </div>
         </>
       ) : (
-        <Alert className="bg-yellow-100 text-center flex-1" >
+        <div className="flex flex-row px-20 items-center h-screen">
+        <Alert className="text-center text-4xl" >
           <AlertTitle>Not connected</AlertTitle>
           <AlertDescription>Please connect your wallet to continue</AlertDescription>
         </Alert>
+        </div>
       )}
     </div>
     </>
   )
 }
 
-export default Bank
+export default D4A

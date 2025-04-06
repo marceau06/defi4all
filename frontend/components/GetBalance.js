@@ -1,6 +1,4 @@
 import { formatUnits  } from "ethers";
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-
 
 const GetBalance = ({ balance, isPending, error, balanceTitle  }) => {
   return (

@@ -1,7 +1,6 @@
 'use client';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { toast } from "sonner"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, USDC_ADDRESS, USDC_ADDRESS_ABI} from '@/constants'
@@ -79,8 +78,8 @@ const DepositUsdc = ({ onDeposit, refetchUserBalanceOnContract, refetchUserBalan
             refetchUserBalanceOnContract()
             refetchUserBalance()
             refetchBalanceContract()
-            setAmount('')
             onDeposit()
+            setAmount('')
         }
     }, [isSuccessDeposit])
     

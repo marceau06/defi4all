@@ -32,8 +32,8 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 
       // Show balance before SWAP
       const usdcBalanceOwnerBeforeSwap = await usdcToken.balanceOf(owner.address);
-      console.log("On Fixture: ETH Owner balance before SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
-      console.log("On Fixture: USDC Owner balance before SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerBeforeSwap, 6));
+      console.log("- Swap ETH to USDC: : ETH Owner balance before SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
+      console.log("- Swap ETH to USDC: : USDC Owner balance before SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerBeforeSwap, 6));
     
       // Get Weth ERC20 token address
       const wethAddress = await uniswapRouter.WETH();
@@ -56,8 +56,8 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 
       // Show balance after SWAP
       const usdcBalanceOwnerAfterSwap = await usdcToken.balanceOf(owner.address);
-      console.log("On Fixture: ETH Owner balance after SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
-      console.log("On Fixture: USDC Owner balance after SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerAfterSwap, 6));
+      console.log("- Swap ETH to USDC: : ETH Owner balance after SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
+      console.log("- Swap ETH to USDC: : USDC Owner balance after SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerAfterSwap, 6));
 
       return { d4A, owner, addressUser, poolAddress, usdcTokenAddress, usdcToken, aUsdcToken, aavePool, uniswapRouter, ethValueInUsdc };
     }
@@ -91,9 +91,11 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
         // Verify that the owner has received USDC after the swap
         const usdcBalanceOwner = await usdcToken.balanceOf(owner.address);
         // Owner's USDC balance must have increased
-        expect(usdcBalanceOwner).to.gt(0);
+        expect(usdcBalanceOwner)
+                .to.gt(0);
         // Owner's USDC balance must be equal to 1 eth
-        expect(usdcBalanceOwner).to.equal(ethValueInUsdc);
+        expect(usdcBalanceOwner)
+                .to.equal(ethValueInUsdc);
       
       })
 
@@ -105,17 +107,17 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
         const { d4A } = await loadFixture(deployContractSupplyTestFixture);
 
         await expect(d4A.supplyToAave(0))
-                .to.be.revertedWith("Supply too small (min 0.01 USDC)");
+                .to.be.revertedWith("Supply too small (min 10 USDC)");
       
       })
 
-      it('should revert when amount sent is more than the wallet balance', async function() {
-        const { d4A } = await loadFixture(deployContractSupplyTestFixture);
-        const amountToDeposit = hre.ethers.parseUnits("10000", 6);
+//       it('should revert when amount sent is more than the wallet balance', async function() {
+//         const { d4A } = await loadFixture(deployContractSupplyTestFixture);
+//         const amountToDeposit = hre.ethers.parseUnits("10000", 6);
 
-        await expect(d4A.supplyToAave(amountToDeposit))
-                .to.be.revertedWith("Insufficient funds"); 
-      })
+//         await expect(d4A.supplyToAave(amountToDeposit))
+//                 .to.be.revertedWith("Insufficient funds"); 
+//       })
 
       it('should revert when amount withdrawn is 0 ', async function() {
         const { d4A } = await loadFixture(deployContractSupplyTestFixture);
@@ -137,17 +139,15 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
         
         const { d4A, owner, usdcToken, aUsdcToken, ethValueInUsdc } = await loadFixture(deployContractSupplyTestFixture);
         
-        console.log("********************* SUPPLY TEST *********************");
+        console.log("-  SUPPLY AAVE TEST - ");
 
         // Amount to supply is 50 usdc
         const amount = hre.ethers.parseUnits("50", 6);
         console.log("Amount to supply: ", amount);
         
         const contractAUsdcBalanceBeforeSupply = await aUsdcToken.balanceOf(d4A);
-        const contractEthBalanceBeforeSupply = await ethers.provider.getBalance(d4A);
         const ownerUsdcBalanceBeforeSupply = await usdcToken.balanceOf(owner.address);
         const ownerAUsdcBalanceBeforeSupply = await aUsdcToken.balanceOf(owner.address);
-        const ownerEthBalanceBeforeSupply = await ethers.provider.getBalance(owner.address);
 
         // AUSDC Contract balance before SUPPLY
         expect(contractAUsdcBalanceBeforeSupply).to.equal(0);
@@ -169,8 +169,7 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
           .to.emit(d4A, "SuppliedToAave")
           .withArgs(owner.address, amount, anyValue); // We accept any value as `when` arg
         
-        console.log("********************* SUPPLY DONE *********************");
-        console.log("Deposit to the pool successfully made for an amount of ", amount);
+
 
         const ownerUsdcBalanceAfterSupply = await usdcToken.balanceOf(owner.address);
         const ownerAUsdcBalancefterSupply = await aUsdcToken.balanceOf(owner.address);
@@ -187,8 +186,10 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
         const reducedAmount = Number(amount) - reduction;
         expect(ownerAUsdcBalancefterSupply).to.equal(reducedAmount);
 
+        console.log("-  SUPPLY AAVE DONE - ");
+        console.log("Deposit to the pool successfully made for an amount of ", amount);
 
-        console.log("********************* WITHDRAWAL TEST *********************");
+        console.log("-  WITHDRAW AAVE TEST - ");
         // Should revert when allowance is less than the amount to supply
         await expect(d4A.withdrawFromAave(reducedAmount))
                 .to.be.revertedWith("Allowance too low");
@@ -201,9 +202,6 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
                 .to.emit(d4A, "WithdrawnFromAave")
                 .withArgs(owner.address, reducedAmount, anyValue); // We accept any value as `when` arg
 
-        console.log("********************* WITHDRAW DONE *********************");
-        console.log("Withdrawal to the pool successfully made for an amount of ", reducedAmount);
-
         const contractAUsdcBalanceAfterWithdraw = await aUsdcToken.balanceOf(d4A);
         const ownerUsdcBalanceAfterWithdraw = await usdcToken.balanceOf(owner.address);
         const ownerAUsdcBalanceAfterWithdraw = await aUsdcToken.balanceOf(owner.address);
@@ -214,6 +212,9 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
         expect(ownerUsdcBalanceAfterWithdraw).to.equal(Number(ownerUsdcBalanceAfterSupply) + Number(reducedAmount));
         // AUSDC Owner balance after Withdraw: Should be O as we recovered all the USDC that had been supplied  
         expect(ownerAUsdcBalanceAfterWithdraw).to.equal(0);
+        console.log("-  WITHDRAW FROM AAVE DONE - ");
+        console.log("Withdrawal to the pool successfully made for an amount of ", reducedAmount);
+
       })
     })
 
@@ -226,13 +227,13 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
                 .to.be.revertedWith("Amount must be greater than 0");
       })
 
-      it("should revert when amount sent is more than the wallet balance", async function() {
-          const { d4A } = await loadFixture(deployContractSupplyTestFixture);
-          const amount = hre.ethers.parseUnits("10000", 6);
+//       it("should revert when amount sent is more than the wallet balance", async function() {
+//           const { d4A } = await loadFixture(deployContractSupplyTestFixture);
+//           const amount = hre.ethers.parseUnits("10000", 6);
   
-          await expect(d4A.depositUSDC(amount))
-                  .to.be.revertedWith("Insufficient funds"); 
-      })
+//           await expect(d4A.depositUSDC(amount))
+//                   .to.be.revertedWith("Insufficient funds"); 
+//       })
       
       it("should revert when not owner who burn token", async function() {
           const { d4A, addressUser } = await loadFixture(deployContractSupplyTestFixture);
@@ -266,12 +267,14 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 
       it("should deposit Usdc on the contract, mint D4ATokens, burn D4ATokens and withdraw Usdc", async function() {
           const { d4A, owner, usdcToken, ethValueInUsdc } = await loadFixture(deployContractSupplyTestFixture);
-
+          
+          console.log("-  MINT BEFORE DEPOSIT TEST - ");
           // Should revert when Try Minting before deposit
           await expect(d4A.mintTokens())
                   .to.be.revertedWith("No mintable tokens available");
+          console.log("-  MINT BEFORE DEPOSIT DONE - ");
 
-          console.log("********************* DEPOSIT TEST *********************");
+          console.log("-  DEPOSIT USDC TEST - ");
           // Amount to supply is 1000 usdc
           const amount = hre.ethers.parseUnits("1000", 6);  
           console.log("Amount usdc to supplly: ", amount);
@@ -290,8 +293,6 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
           await expect(d4A.depositUSDC(amount))
                   .to.emit(d4A, "Deposited")
                   .withArgs(owner.address, amount, anyValue); // We accept any value as timestamp arg as hardhat can take more than 1 second to mine a block
-          console.log("********************* DEPOSIT DONE *********************");
-          console.log("Deposit to the contract successfully made for an amount of ", amount);
 
           const ownerUsdcBalanceOnTheContractAfterDeposit = await d4A.getUserBalance();
           const ownerD4ABalanceAfterDeposit = await d4A.balanceOf(owner.address);
@@ -302,22 +303,25 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
           expect(ownerUsdcBalanceOnTheContractAfterDeposit).to.eq(amount); 
           // Owner must have received 15% of his deposit in D4A
           expect(ownerD4ABalanceAfterDeposit).to.eq(0); 
-          
 
-          console.log("********************* MINTING test *********************");
+          console.log("-  DEPOSIT USDC DONE - ");
+          console.log("Deposit to the contract successfully made for an amount of ", amount);
+
+          console.log("-  MINTING D4A TEST - ");
 
           const blockBefore = await ethers.provider.getBlock("latest");
           console.log("Timestamp before increase:", blockBefore.timestamp);
         
           const oneYearInSeconds = 31536000; // 1 year in seconds
-          const oneMonthInSeconds = (30 * 24 * 60 * 60); // 1 mont in seconds
+          const oneMonthInSeconds = (30 * 24 * 60 * 60); // 1 month in seconds
           const rewardsPerYear = 15 / 100; // 15% per year of rewards
           const expectedRewardsValuePerMonth = Math.trunc(Number(amount) * rewardsPerYear * oneMonthInSeconds / oneYearInSeconds); // Estimated 30 days of rewards
           const expectedRewardsValuePerSecond = Math.trunc(Number(amount) * rewardsPerYear / oneYearInSeconds); // Estimated 1 second of rewards
 
           // Check the amount of D4A tokens that can be minted before the time increase 
           const mintableTokensBefore = await d4A.calculateRewards();
-          expect(mintableTokensBefore).to.eq(0);
+          expect(mintableTokensBefore)
+                .to.eq(0);
 
           // Try to mint the tokens before the time increase
           await expect(d4A.mintTokens())
@@ -338,6 +342,12 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
           // Get all the tokens that can be minted
           const totalMintableTokens = mintableTokens + rewards;
 
+          // Check getTotalRewards function at this point
+          expect(totalMintableTokens)
+                .to.eq(await d4A.getTotalRewards());
+          console.log("Total mintable tokens: ", totalMintableTokens);
+          console.log("Rewards: ", rewards);    
+
           // Harhdat will mine a new block with the new timestamp when we call the mint function
           // Estimate calculated rewards after mining new block
           const expectedMintableTokens = expectedRewardsValuePerMonth + expectedRewardsValuePerSecond;
@@ -350,13 +360,17 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
           await expect(d4A.mintTokens())
                   .to.emit(d4A, "Minted")
                   .withArgs(owner.address, anyValue); // We already know the value of the minted tokens with calculateRewards() function
+
+          expect(await d4A.getMintableTokens())
+                .to.eq(0);
+
           const ownerD4ABalanceOnTheContractAfterMint= await d4A.balanceOf(owner.address);
-          console.log("********************* MINTING DONE *********************");
+          console.log("-  MINTING D4A DONE - ");
           console.log("D4A User balance after MINT: ",  hre.ethers.formatUnits(ownerD4ABalanceOnTheContractAfterMint, 6));
 
 
 
-          console.log("********************* BURN TEST *********************");
+          console.log("-  BURN D4A TEST - ");
           const ownerD4ABalanceBeforeBurn = await d4A.balanceOf(owner.address);
 
           // Should revert if burn more than balance
@@ -370,35 +384,40 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
                   .withArgs(owner.address, ownerD4ABalanceBeforeBurn);
 
           const ownerD4ABalanceOnTheContractAfterBurn = await d4A.balanceOf(owner.address);
-          console.log("********************* BURN DONE *********************");
-          console.log("D4A User balance after BURN: ",  hre.ethers.formatUnits(ownerD4ABalanceOnTheContractAfterBurn, 6));
 
           // Owner balance must be equal to 0
-          expect(ownerD4ABalanceOnTheContractAfterBurn).to.eq(0);
+          expect(ownerD4ABalanceOnTheContractAfterBurn)
+                .to.eq(0);
 
-          console.log("********************* WITHDRAW TEST *********************");
+          console.log("-  BURN D4A DONE - ");
+          console.log("D4A User balance after BURN: ",  hre.ethers.formatUnits(ownerD4ABalanceOnTheContractAfterBurn, 6));
+
+          console.log("-  WITHDRAW USDC TEST - ");
           // withdrawUSDC
           await expect(d4A.withdrawUSDC(amount))
                   .to.emit(d4A, "Withdrawn")
                   .withArgs(owner.address, amount, anyValue); // We accept any value as `when` arg
-          console.log("********************* WITHDRAW DONE *********************");
-          console.log("Deposit to the contract successfully made for an amount of ", amount);
 
           const ownerUsdcBalanceOnTheContractAfterWithdraw = await d4A.getUserBalance();
           const ownerUsdcBalanceAfterWithdraw = await usdcToken.balanceOf(owner.address);
 
           expect(ownerUsdcBalanceOnTheContractAfterWithdraw).to.eq(0);
           expect(ownerUsdcBalanceAfterWithdraw).to.eq(ethValueInUsdc);
-        
-          // Last test to check that no rewards received if deposit is less than 10 usdc
 
+          console.log("-  WITHDRAW USDC DONE - ");
+          console.log("Withdrawal to the contract successfully made for an amount of ", amount);
+        
+          console.log("-  MINTING TOO SMALL AMOUNT TEST - ");
+          // Last test to check that no rewards received if deposit is less than 10 usdc
           // Approve the contract to spend USDC tokens
-          await usdcToken.approve(d4A, 100000); // 0.1 usdc
+          const tooSmallAmount = hre.ethers.parseUnits("0.1", 6); // 0.1 usdc
+          await usdcToken.approve(d4A, tooSmallAmount); // 0.1 usdc
  
           // Deposit tokens into the contract
-          await expect(d4A.depositUSDC(100000))
+          await expect(d4A.depositUSDC(tooSmallAmount))
                   .to.emit(d4A, "Deposited")
-                  .withArgs(owner.address, 100000, anyValue); // We accept any value as `when` arg
+                  .withArgs(owner.address, tooSmallAmount, anyValue); // We accept any value as `when` arg
+         console.log("Deposit to the contract successfully made for an amount of ", tooSmallAmount);
           
           // Increase the time on the blockchain to 120 seconds
           await network.provider.send("evm_increaseTime", [120]);
@@ -408,14 +427,20 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
           expect(await d4A.calculateRewards())
                   .to.eq(0);
 
+          console.log("Minting tokens for an amount of ", tooSmallAmount);
           // Try Minting after time increased
           await expect(d4A.mintTokens())
                   .to.be.revertedWith("No mintable tokens available");
 
           // withdrawUSDC
-          await expect(d4A.withdrawUSDC(100000))
+          await expect(d4A.withdrawUSDC(tooSmallAmount))
                   .to.emit(d4A, "Withdrawn")
-                  .withArgs(owner.address, 100000, anyValue)
+                  .withArgs(owner.address, tooSmallAmount, anyValue)
+          console.log("Withdrawal to the contract successfully made for an amount of ", tooSmallAmount);
+
+
+        console.log("- MINTING TOO SMALL AMOUNT DONE - ");
+
       })
     })
     

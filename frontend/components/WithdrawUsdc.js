@@ -1,19 +1,17 @@
 'use client';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Label } from './ui/label'
 import { toast } from "sonner"
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/constants'
 import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
 import { parseUnits  } from "ethers"
 
-const WithdrawUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
+const WithdrawUsdc = ({ onWithdraw, refetchUserBalanceOnContract, refetchUserBalance, refetchBalanceContract }) => {
 
     const [amount, setAmount] = useState('')
 
-    const { data: hash, error, isPending, writeContract } = useWriteContract()
+    const { data: hash, error, writeContract } = useWriteContract()
 
     const handleWithdraw = async () => { 
         try {
@@ -43,6 +41,7 @@ const WithdrawUsdc = ({ refetchUserBalanceOnContract, refetchUserBalance, refetc
             refetchUserBalanceOnContract()
             refetchUserBalance()
             refetchBalanceContract()
+            onWithdraw()
         }
     }, [isConfirmed])
 

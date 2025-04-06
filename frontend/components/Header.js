@@ -1,7 +1,5 @@
 'use client'; 
-import { useEffect, useState } from 'react';
-import { useReadContract, useAccount } from "wagmi";
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants";
+import { useAccount } from "wagmi";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { User } from 'lucide-react';
 

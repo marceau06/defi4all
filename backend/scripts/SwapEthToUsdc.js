@@ -16,8 +16,8 @@ async function main() {
 
     // Show balance before SWAP
     const usdcBalanceOwnerBeforeSwap = await usdcToken.balanceOf(owner.address);
-    console.log("On Fixture: ETH Owner balance before SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
-    console.log("On Fixture: USDC Owner balance before SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerBeforeSwap, 6));
+    console.log("ETH Owner balance before SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
+    console.log("USDC Owner balance before SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerBeforeSwap, 6));
 
     // Get Weth ERC20 token address
     const wethAddress = await uniswapRouter.WETH();
@@ -34,14 +34,14 @@ async function main() {
             owner.address, 
             // Trx must be confirmed in next 20 minutes
             Math.floor(Date.now() / 1000) + 60 * 20, 
-            // Amount to swap of 1 ETH
-            { value: hre.ethers.parseEther('1') } 
+            // Amount to swap of 1000 ETH
+            { value: hre.ethers.parseEther('1000') } 
         )
 
     // Show balance after SWAP
     const usdcBalanceOwnerAfterSwap = await usdcToken.balanceOf(owner.address);
-    console.log("On Fixture: ETH Owner balance after SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
-    console.log("On Fixture: USDC Owner balance after SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerAfterSwap, 6));
+    console.log("ETH Owner balance after SWAP:", hre.ethers.formatEther(await ethers.provider.getBalance(owner.address)));
+    console.log("USDC Owner balance after SWAP :", hre.ethers.formatUnits(usdcBalanceOwnerAfterSwap, 6));
 
 }
 
