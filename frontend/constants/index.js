@@ -732,7 +732,7 @@ export const CONTRACT_ABI = [
       },
       {
         "internalType": "uint256",
-        "name": "lastDeposit",
+        "name": "lastDepositOrWithdraw",
         "type": "uint256"
       },
       {
