@@ -1,5 +1,5 @@
-// export const CONTRACT_ADDRESS = "0xb0fBf99C983cFC6A7010d40De9aE48D2e37d49A7"; // SEPOLIA
-export const CONTRACT_ADDRESS = "0x7722f5d7964a04672761cdfdC7c17B7Ac8f197b7"; // HARDHAT 
+export const CONTRACT_ADDRESS = "0xf5B2c87bc837B2EB49b33fE9408867Ef7B3f3E35"; // SEPOLIA
+// export const CONTRACT_ADDRESS = "0x7722f5d7964a04672761cdfdC7c17B7Ac8f197b7"; // HARDHAT 
 export const CONTRACT_ABI = [
   {
     "inputs": [
@@ -732,7 +732,7 @@ export const CONTRACT_ABI = [
       },
       {
         "internalType": "uint256",
-        "name": "lastDeposit",
+        "name": "lastDepositOrWithdraw",
         "type": "uint256"
       },
       {
